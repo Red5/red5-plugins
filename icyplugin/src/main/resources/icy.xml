@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:lang="http://www.springframework.org/schema/lang"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:jee="http://www.springframework.org/schema/jee"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+                           http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang-2.5.xsd
+                           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-2.5.xsd
+                           http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-2.5.xsd">
+			
+	<bean id="streamManager" class="org.red5.server.plugin.icy.StreamManager">
+		<property name="poolSize" value="4" />							
+	</bean>					
+								
+	<bean id="nsvConsumer" class="org.red5.server.plugin.icy.stream.NSVConsumer" scope="prototype">
+		<property name="password" value="changeme"/>
+		<property name="host" value=""/>
+		<property name="port" value="8000"/>
+	</bean>
+
+	<bean id="nsvThread" class="org.red5.server.plugin.icy.ICYSocketHandler" scope="prototype">
+        <property name="waitTime" value="50"/>
+		<property name="password" value="changeme"/>
+		<property name="host" value=""/>
+		<property name="port" value="8000"/>
+		<!-- Whether or not to send "flipped" meta tag to indicate upside down video. If 
+		      flipped meta tag is not used, the dimensions will be negative.
+		-->
+		<property name="notifyFlipped" value="true"/>
+	</bean>
+		
+</beans>
