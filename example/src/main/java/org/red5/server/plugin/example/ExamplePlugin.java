@@ -35,7 +35,7 @@ public class ExamplePlugin extends Red5Plugin {
 	private static Logger log = Red5LoggerFactory.getLogger(ExamplePlugin.class, "plugins");
 	
 	public void doStart() throws Exception {
-		log.debug("Start");
+		log.debug("Starttttttttt");
 		super.doStart();
 	}
 

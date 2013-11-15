@@ -2,10 +2,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>authplugin</artifactId>
+	<artifactId>securityplugin</artifactId>
 	<packaging>jar</packaging>
-	<name>Red5 :: authplugin</name>
-	<description>The Red5 Authplugin</description>
+	<name>Red5 :: securityplugin</name>
+	<description>The Red5 SecurityPlugin</description>
 	<groupId>org.red5</groupId>
 	<version>1.0.2</version>
 	<url>https://code.google.com/p/red5/</url>
@@ -131,21 +131,14 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-jar-plugin</artifactId>
-				<version>2.4</version>
-				<executions>
-					<execution>
-						<configuration>
-							<archive>
-								<manifest>
-									<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-								</manifest>
-								<manifestEntries>
-									<SCM-Revision>${buildNumber}</SCM-Revision>
-								</manifestEntries>
-							</archive>
-						</configuration>
-					</execution>
-				</executions>
+				<version>2.4</version>		
+				<configuration>
+					<archive>
+						<manifestEntries>
+			              <Red5-Plugin-Main-Class>org.red5.server.plugin.security.SecurityPlugin</Red5-Plugin-Main-Class>
+			            </manifestEntries>
+					</archive>
+				</configuration>
 			</plugin>
 			<plugin>
 				<artifactId>maven-dependency-plugin</artifactId>

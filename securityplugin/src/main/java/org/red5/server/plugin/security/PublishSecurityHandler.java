@@ -89,7 +89,7 @@ public class PublishSecurityHandler extends SecurityBase implements IStreamPubli
 		try {
 			NamesAuth = true;
 			//FileInputStream fstream = new FileInputStream(fileName);
-			DataInputStream in = new DataInputStream(application.getResource(fileName).getInputStream());
+			DataInputStream in = new DataInputStream(application.getResource("WEB-INF/" + fileName).getInputStream());
 			BufferedReader br = new BufferedReader(new InputStreamReader(in));
 
 			String strLine = "";
