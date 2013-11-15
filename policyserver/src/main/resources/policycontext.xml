@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:lang="http://www.springframework.org/schema/lang"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd                            
+    http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang-3.0.xsd">
+
+    <bean id="placeholderConfig" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="location" value="classpath:/red5.properties" />
+    </bean>
+	
+    <bean id="customEditorConfigurer" class="org.springframework.beans.factory.config.CustomEditorConfigurer">
+        <property name="customEditors">
+            <map>
+                <entry key="java.net.SocketAddress" value="org.apache.mina.integration.beans.InetSocketAddressEditor" />
+            </map>
+        </property>
+    </bean> 
+
+    <!-- Socket policy handler -->
+    <bean id="socketPolicyHandler" class="org.red5.server.net.policy.SocketPolicyHandler">
+        <property name="host" value="${policy.host}" />
+        <property name="port" value="${policy.port}" />
+        <property name="policyFilePath" value="flashpolicy.xml" />        
+    </bean>
+	
+ </beans> 
