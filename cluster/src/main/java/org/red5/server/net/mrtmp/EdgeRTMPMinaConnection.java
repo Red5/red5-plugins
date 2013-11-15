@@ -1,0 +1,70 @@
+/*
+ * RED5 Open Source Flash Server - http://code.google.com/p/red5/
+ * 
+ * Copyright 2006-2012 by respective authors (see below). All rights reserved.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.red5.server.net.mrtmp;
+
+import org.red5.server.api.scheduling.ISchedulingService;
+import org.red5.server.net.rtmp.RTMPMinaConnection;
+import org.red5.server.net.rtmp.codec.RTMP;
+
+public class EdgeRTMPMinaConnection extends RTMPMinaConnection {
+	
+	private IMRTMPEdgeManager mrtmpManager;
+	
+	public void setMrtmpManager(IMRTMPEdgeManager mrtmpManager) {
+		this.mrtmpManager = mrtmpManager;
+	}
+
+	@Override
+	public void close() {
+		boolean needNotifyOrigin = false;
+		RTMP state = getState();
+		getWriteLock().lock();
+		try{
+			if (state.getState() == RTMP.STATE_CONNECTED) {
+				needNotifyOrigin = true;
+				// now we are disconnecting ourselves
+				state.setState(RTMP.STATE_EDGE_DISCONNECTING);
+			}
+		} finally {
+			getWriteLock().unlock();
+		}
+		if (needNotifyOrigin) {
+			IMRTMPConnection conn = mrtmpManager.lookupMRTMPConnection(this);
+			if (conn != null) {
+				conn.disconnect(getId());
+			}
+		}
+		getWriteLock().lock();
+		try {
+			if (state.getState() == RTMP.STATE_DISCONNECTED) {
+				return;
+			} else {
+				state.setState(RTMP.STATE_DISCONNECTED);
+			}
+		} finally {
+			getWriteLock().unlock();
+		}
+		super.close();
+	}
+
+	@Override
+	protected void startWaitForHandshake(ISchedulingService service) {
+		// FIXME: do nothing to avoid disconnect.
+	}
+}
