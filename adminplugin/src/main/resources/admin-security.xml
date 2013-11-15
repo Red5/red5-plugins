@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context" 
+       xmlns:jee="http://www.springframework.org/schema/jee"
+       xsi:schemaLocation="
+    http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+    http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
+    http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-2.5.xsd">
+	
+    <!--  
+    <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean">
+	  <property name="configLocation" value="classpath:/ehcache-failsafe.xml"/>
+	</bean>
+	    
+	<bean id="userCacheBackend" class="org.springframework.cache.ehcache.EhCacheFactoryBean">
+	  <property name="cacheManager" ref="cacheManager"/>
+	  <property name="cacheName" value="userCache"/>
+	</bean>
+	
+	<bean id="userCache" class="org.springframework.security.providers.dao.cache.EhCacheBasedUserCache">
+	  <property name="cache" ref="userCacheBackend"/>
+	</bean>            
+    -->
+    
+    <bean id="authClientRegistry" class="org.red5.server.plugin.admin.client.AuthClientRegistry"/>
+    
+    <bean id="userCache" class="org.springframework.security.providers.dao.cache.NullUserCache"/>
+
+    <bean id="passwordEncoder" class="org.springframework.security.providers.encoding.Md5PasswordEncoder" />
+    
+    <bean id="saltSource" class="org.springframework.security.providers.dao.salt.SystemWideSaltSource">
+        <property name="systemWideSalt">
+            <value>seKret</value>
+        </property>
+    </bean>
+    
+    <bean id="userDetailsService" class="org.springframework.security.userdetails.jdbc.JdbcUserDetailsManager" depends-on="dataSource" lazy-init="true">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="enableGroups" value="false"/>
+        <property name="authenticationManager" ref="authenticationManager"/>
+        
+        <property name="usersByUsernameQuery" value="SELECT username,password,enabled FROM APPUSER WHERE username = ?"/>
+        <property name="authoritiesByUsernameQuery" value="SELECT username,authority FROM APPROLE WHERE username = ?"/>
+      
+    	<property name="createAuthoritySql" value="INSERT INTO APPROLE (username, authority) VALUES (?, ?)"/>
+    	<property name="createUserSql" value="INSERT INTO APPUSER (username, password, enabled) VALUES (?, ?, ?)"/>
+    	<property name="deleteUserSql" value="DELETE FROM APPUSER,APPROLE WHERE username = ?"/>
+ 		<property name="updateUserSql" value="UPDATE APPUSER SET password = ?, enabled = ? WHERE username = ?"/>
+    	<property name="userExistsSql" value="SELECT username FROM APPUSER WHERE username = ?"/>
+    	<property name="changePasswordSql" value="UPDATE APPUSER SET password = ? WHERE username = ?"/>
+    </bean>
+        
+    <bean id="dataSource" class="org.apache.derby.jdbc.EmbeddedDataSource" depends-on="userDatabase">
+        <property name="databaseName" value="Admin"/>
+        <property name="user" value="APP"/>
+        <property name="password" value="APP"/>
+        <property name="createDatabase" value="create"/>
+    </bean>   	
+         
+    <bean id="daoAuthenticationProvider" class="org.springframework.security.providers.dao.DaoAuthenticationProvider" depends-on="userDetailsService">
+        <property name="userDetailsService" ref="userDetailsService"/>
+        <property name="saltSource" ref="saltSource"/>
+        <property name="passwordEncoder" ref="passwordEncoder"/>
+        <property name="userCache" ref="userCache"/>
+    </bean>
+
+    <bean id="authenticationManager" class="org.springframework.security.providers.ProviderManager">
+        <property name="providers">
+            <list>
+                <ref local="daoAuthenticationProvider"/>
+            </list>
+        </property>
+    </bean>
+    
+    <bean id="userDatabase" class="org.red5.server.plugin.admin.dao.UserDatabase" init-method="init" destroy-method="shutdown">
+        <property name="debug" value="true"/>
+        <property name="database" value="Admin"/>
+        <property name="userName" value="APP"/>
+        <property name="password" value="APP"/>        
+    </bean>
+
+    <!-- Message localization -->
+    <bean id="adminMessageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+        <property name="basenames">
+            <value>message</value>
+        </property>
+    </bean>
+
+</beans>
