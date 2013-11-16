@@ -79,8 +79,6 @@ public class PlaybackSecurityHandler extends SecurityBase implements IStreamPlay
 
 	public boolean isPlaybackAllowed(IScope scope, String name, int start, int length, boolean flushPlaylist) {
 		IConnection conn = Red5.getConnectionLocal();
-
-		
 		
 		try {
 			
