@@ -22,6 +22,7 @@ package org.red5.server.plugin.security;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.InputStreamReader;
+import java.util.Map;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.red5.logging.Red5LoggerFactory;
@@ -79,7 +80,12 @@ public class PlaybackSecurityHandler extends SecurityBase implements IStreamPlay
 	public boolean isPlaybackAllowed(IScope scope, String name, int start, int length, boolean flushPlaylist) {
 		IConnection conn = Red5.getConnectionLocal();
 
+		
+		
 		try {
+			
+			Map<String, Object> connectParams = conn.getConnectParams();
+			
 			String pageUrl = conn.getConnectParams().get("pageUrl").toString();
 			String swfUrl = conn.getConnectParams().get("swfUrl").toString();
 			String ip = conn.getRemoteAddress();
@@ -135,8 +141,10 @@ public class PlaybackSecurityHandler extends SecurityBase implements IStreamPlay
 
 		url = url.substring(domainStartPos, domainEndPos);
 
-		if (ArrayUtils.indexOf(patterns, url) > 0)
+		int indexOf = ArrayUtils.indexOf(patterns, url);
+		if (ArrayUtils.indexOf(patterns, url) != ArrayUtils.INDEX_NOT_FOUND) {
 			return true;
+		}
 
 		return false;
 	}
@@ -145,7 +153,7 @@ public class PlaybackSecurityHandler extends SecurityBase implements IStreamPlay
 		String[] domainsArray = new String[100];
 
 		try {
-			DataInputStream in = new DataInputStream(application.getResource(fileName).getInputStream());
+			DataInputStream in = new DataInputStream(application.getResource("WEB-INF/" + fileName).getInputStream());
 			BufferedReader br = new BufferedReader(new InputStreamReader(in));
 
 			int index = 0;

@@ -74,9 +74,9 @@ public class PublishSecurityHandler extends SecurityBase implements IStreamPubli
 	}
 
 	private Boolean validate(String name, String mode, HashMap<String, String[]> patterns) {
-		if (!patterns.get(name).equals(null)) {
+		if (patterns.get(name) != null) {
 			String[] modes = patterns.get(name);
-			if (ArrayUtils.indexOf(modes, mode) > 0)
+			if (ArrayUtils.indexOf(modes, mode) != ArrayUtils.INDEX_NOT_FOUND)
 				return true;
 		}
 		return false;

@@ -98,7 +98,7 @@ public class SharedObjectSecurityHandler extends SecurityBase implements IShared
 		try {
 			NamesAuth = true;
 			//FileInputStream fstream = new FileInputStream(fileName);
-			DataInputStream in = new DataInputStream(application.getResource(fileName).getInputStream());
+			DataInputStream in = new DataInputStream(application.getResource("WEB-INF/" + fileName).getInputStream());
 			BufferedReader br = new BufferedReader(new InputStreamReader(in));
 
 			int index = 0;
