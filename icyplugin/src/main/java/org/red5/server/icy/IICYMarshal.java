@@ -19,7 +19,7 @@ package org.red5.server.icy;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
-import org.red5.server.api.IScope;
+import org.red5.server.api.scope.IScope;
 import org.red5.server.plugin.icy.marshal.transpose.AudioFramer;
 import org.red5.server.plugin.icy.marshal.transpose.VideoFramer;
 import org.red5.server.plugin.icy.stream.ICYStream;

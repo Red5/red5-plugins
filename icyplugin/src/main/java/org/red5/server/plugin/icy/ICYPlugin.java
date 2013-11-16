@@ -20,7 +20,7 @@ package org.red5.server.plugin.icy;
  */
 
 import org.red5.logging.Red5LoggerFactory;
-import org.red5.server.api.IScope;
+import org.red5.server.api.scope.IScope;
 import org.red5.server.plugin.Red5Plugin;
 import org.red5.server.plugin.icy.marshal.ICYMarshal;
 import org.red5.server.plugin.icy.stream.NSVConsumer;

@@ -131,21 +131,14 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-jar-plugin</artifactId>
-				<version>2.4</version>
-				<executions>
-					<execution>
-						<configuration>
-							<archive>
-								<manifest>
-									<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-								</manifest>
-								<manifestEntries>
-									<SCM-Revision>${buildNumber}</SCM-Revision>
-								</manifestEntries>
-							</archive>
-						</configuration>
-					</execution>
-				</executions>
+				<version>2.4</version>		
+				<configuration>
+					<archive>
+						<manifestEntries>
+			              <Red5-Plugin-Main-Class>org.red5.server.plugin.icy.ICYPlugin</Red5-Plugin-Main-Class>
+			            </manifestEntries>
+					</archive>
+				</configuration>
 			</plugin>
 			<plugin>
 				<artifactId>maven-dependency-plugin</artifactId>
@@ -454,6 +447,11 @@
 			<groupId>org.red5</groupId>
 			<artifactId>red5-server</artifactId>
 			<version>1.0.2-RC3</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-httpclient</groupId>
+			<artifactId>commons-httpclient</artifactId>
+			<version>3.1</version>
 		</dependency>
 	</dependencies>
 </project>

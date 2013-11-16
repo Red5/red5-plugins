@@ -27,13 +27,15 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.apache.mina.core.buffer.IoBuffer;
-import org.red5.server.api.IScope;
+import org.red5.codec.AACAudio;
+import org.red5.codec.IAudioStreamCodec;
+import org.red5.codec.IStreamCodecInfo;
+import org.red5.codec.StreamCodecInfo;
 import org.red5.server.api.event.IEvent;
+import org.red5.server.api.scope.IScope;
 import org.red5.server.api.statistics.IClientBroadcastStreamStatistics;
 import org.red5.server.api.statistics.support.StatisticsCounter;
-import org.red5.server.api.stream.IAudioStreamCodec;
 import org.red5.server.api.stream.IBroadcastStream;
-import org.red5.server.api.stream.IStreamCodecInfo;
 import org.red5.server.api.stream.IStreamListener;
 import org.red5.server.api.stream.IStreamPacket;
 import org.red5.server.api.stream.IVideoStreamCodec;
@@ -49,13 +51,12 @@ import org.red5.server.messaging.OOBControlMessage;
 import org.red5.server.messaging.PipeConnectionEvent;
 import org.red5.server.net.rtmp.event.AudioData;
 import org.red5.server.net.rtmp.event.IRTMPEvent;
+import org.red5.server.net.rtmp.event.Notify;
 import org.red5.server.net.rtmp.message.Header;
 import org.red5.server.plugin.icy.marshal.transpose.AudioFramer;
 import org.red5.server.plugin.icy.marshal.transpose.VideoFramer;
 import org.red5.server.stream.IStreamData;
 import org.red5.server.stream.PlayEngine;
-import org.red5.server.stream.codec.AACAudio;
-import org.red5.server.stream.codec.StreamCodecInfo;
 import org.red5.server.stream.message.RTMPMessage;
 
 /**
@@ -259,10 +260,10 @@ public class ICYStream implements IBroadcastStream, IProvider, IPipeConnectionLi
 					//buffer.put((byte) 0x06);
 					buffer.flip();
 					
-					RTMPMessage msg = new RTMPMessage();
 					AudioData data = new AudioData(buffer);
 					data.setHeader(new Header());
-					msg.setBody(data);
+					RTMPMessage msg = RTMPMessage.build(data);
+//					msg.setBody(data);
 
 					try {
 						((PlayEngine) consumer).pushMessage(null, msg);
@@ -298,8 +299,7 @@ public class ICYStream implements IBroadcastStream, IProvider, IPipeConnectionLi
 			}
 
 			if (mLivePipe != null) {
-				RTMPMessage msg = new RTMPMessage();
-				msg.setBody(rtmpEvent);
+				RTMPMessage msg = RTMPMessage.build(rtmpEvent);
 				msg.getBody().setTimestamp(eventTime);
 				try {
 					mLivePipe.pushMessage(msg);
@@ -357,6 +357,12 @@ public class ICYStream implements IBroadcastStream, IProvider, IPipeConnectionLi
 
 	public void setMetaDataEvent(IRTMPEvent event) {
 		_metaDataEvent = event;
+	}
+
+	@Override
+	public Notify getMetaData() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

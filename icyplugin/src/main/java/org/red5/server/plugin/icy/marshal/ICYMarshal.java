@@ -23,11 +23,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.mina.core.buffer.IoBuffer;
+import org.red5.codec.AACAudio;
 import org.red5.io.amf.Output;
 import org.red5.io.object.Serializer;
 import org.red5.logging.Red5LoggerFactory;
 import org.red5.server.api.IContext;
-import org.red5.server.api.IScope;
+import org.red5.server.api.scope.IBroadcastScope;
+import org.red5.server.api.scope.IScope;
 import org.red5.server.icy.IICYMarshal;
 import org.red5.server.icy.message.Frame;
 import org.red5.server.icy.nsv.NSVFrameQueue;
@@ -37,10 +39,8 @@ import org.red5.server.plugin.icy.StreamManager;
 import org.red5.server.plugin.icy.marshal.transpose.AudioFramer;
 import org.red5.server.plugin.icy.marshal.transpose.VideoFramer;
 import org.red5.server.plugin.icy.stream.ICYStream;
-import org.red5.server.stream.BroadcastScope;
-import org.red5.server.stream.IBroadcastScope;
+import org.red5.server.scope.BroadcastScope;
 import org.red5.server.stream.IProviderService;
-import org.red5.server.stream.codec.AACAudio;
 import org.slf4j.Logger;
 
 /**
@@ -90,7 +90,7 @@ public class ICYMarshal implements IICYMarshal {
 		IProviderService providerService = (IProviderService) context.getBean(IProviderService.BEAN_NAME);
 		if (providerService.registerBroadcastStream(outputScope, stream.getPublishedName(), stream)) {
 			IBroadcastScope bsScope = (BroadcastScope) providerService.getLiveProviderInput(outputScope, stream.getPublishedName(), true);
-			bsScope.setAttribute(IBroadcastScope.STREAM_ATTRIBUTE, stream);
+//			bsScope.setAttribute(IBroadcastScope.STREAM_ATTRIBUTE, stream);
 		}
 		audioFramer = new AudioFramer(stream);
 	}
@@ -235,7 +235,7 @@ public class ICYMarshal implements IICYMarshal {
 		props.putAll(metaData);
 		props.put("canSeekToEnd", false);
 
-		out.writeMap(props, new Serializer());
+		out.writeMap(props);
 		buf.flip();
 
 		return new Notify(buf);
