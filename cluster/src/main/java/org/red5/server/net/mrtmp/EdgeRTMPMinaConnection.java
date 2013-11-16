@@ -34,7 +34,7 @@ public class EdgeRTMPMinaConnection extends RTMPMinaConnection {
 	public void close() {
 		boolean needNotifyOrigin = false;
 		RTMP state = getState();
-		getWriteLock().lock();
+		//getWriteLock().lock();
 		try{
 			if (state.getState() == RTMP.STATE_CONNECTED) {
 				needNotifyOrigin = true;
@@ -42,7 +42,7 @@ public class EdgeRTMPMinaConnection extends RTMPMinaConnection {
 				state.setState(RTMP.STATE_EDGE_DISCONNECTING);
 			}
 		} finally {
-			getWriteLock().unlock();
+			//getWriteLock().unlock();
 		}
 		if (needNotifyOrigin) {
 			IMRTMPConnection conn = mrtmpManager.lookupMRTMPConnection(this);
@@ -50,7 +50,7 @@ public class EdgeRTMPMinaConnection extends RTMPMinaConnection {
 				conn.disconnect(getId());
 			}
 		}
-		getWriteLock().lock();
+	//	getWriteLock().lock();
 		try {
 			if (state.getState() == RTMP.STATE_DISCONNECTED) {
 				return;
@@ -58,13 +58,13 @@ public class EdgeRTMPMinaConnection extends RTMPMinaConnection {
 				state.setState(RTMP.STATE_DISCONNECTED);
 			}
 		} finally {
-			getWriteLock().unlock();
+		//	getWriteLock().unlock();
 		}
 		super.close();
 	}
 
-	@Override
-	protected void startWaitForHandshake(ISchedulingService service) {
-		// FIXME: do nothing to avoid disconnect.
-	}
+//	@Override
+//	protected void startWaitForHandshake(ISchedulingService service) {
+//		// FIXME: do nothing to avoid disconnect.
+//	}
 }

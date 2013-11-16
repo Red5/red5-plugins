@@ -440,11 +440,6 @@
 		</dependency>
 		<dependency>
 			<groupId>org.red5</groupId>
-			<artifactId>red5-io</artifactId>
-			<version>1.0.2</version>
-		</dependency>
-		<dependency>
-			<groupId>org.red5</groupId>
 			<artifactId>red5-server</artifactId>
 			<version>1.0.2-RC3</version>
 		</dependency>

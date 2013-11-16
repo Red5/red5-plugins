@@ -76,7 +76,7 @@ public class EdgeMRTMPHandler extends IoHandlerAdapter implements Constants {
 				RTMPHeader rtmpHeader = (RTMPHeader) mrtmpPacket.getHeader();
 				RTMPBody rtmpBody = (RTMPBody) mrtmpPacket.getBody();
 				boolean toDisconnect = false;
-				conn.getWriteLock().lock();
+				//conn.getWriteLock().lock();
 				try {
 					if (rtmpState.getState() == RTMP.STATE_ORIGIN_CONNECT_FORWARDED &&
 							rtmpHeader.getRtmpType() == TYPE_INVOKE) {
@@ -93,7 +93,7 @@ public class EdgeMRTMPHandler extends IoHandlerAdapter implements Constants {
 						}
 					}
 				} finally {
-					conn.getWriteLock().unlock();
+				//	conn.getWriteLock().unlock();
 				}
 				log.debug("Forward packet to client: {}", rtmpBody.getRtmpPacket().getMessage());
 				// send the packet back to client
@@ -101,13 +101,13 @@ public class EdgeMRTMPHandler extends IoHandlerAdapter implements Constants {
 				if (toDisconnect) {
 					conn.close();
 				}
-				conn.getWriteLock().lock();
+			//	conn.getWriteLock().lock();
 				try {
 					if (rtmpState.getState() == RTMP.STATE_CONNECTED) {
 						conn.startRoundTripMeasurement();
 					}
 				} finally {
-					conn.getWriteLock().unlock();
+				//	conn.getWriteLock().unlock();
 				}
 				break;
 			default:

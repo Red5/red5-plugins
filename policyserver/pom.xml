@@ -2,10 +2,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>authplugin</artifactId>
+	<artifactId>policyplugin</artifactId>
 	<packaging>jar</packaging>
-	<name>Red5 :: authplugin</name>
-	<description>The Red5 Authplugin</description>
+	<name>Red5 :: policyplugin</name>
+	<description>The Red5 Policyplugin</description>
 	<groupId>org.red5</groupId>
 	<version>1.0.2</version>
 	<url>https://code.google.com/p/red5/</url>

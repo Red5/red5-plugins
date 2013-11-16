@@ -149,7 +149,7 @@ public class EdgeRTMPHandler extends RTMPHandler {
 
 		final String sessionId = null;
 
-		conn.setup(host, path, sessionId, params);
+		conn.setup(host, path, params);
 
 		// check the security constraints
 		// send back "ConnectionRejected" if fails.

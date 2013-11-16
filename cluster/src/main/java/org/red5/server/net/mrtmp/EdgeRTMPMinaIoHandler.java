@@ -18,12 +18,13 @@
 
 package org.red5.server.net.mrtmp;
 
+import org.red5.server.net.rtmp.RTMPConnManager;
 import org.red5.server.net.rtmp.RTMPMinaConnection;
 import org.red5.server.net.rtmp.RTMPMinaIoHandler;
 
 public class EdgeRTMPMinaIoHandler extends RTMPMinaIoHandler {
 	@Override
 	protected RTMPMinaConnection createRTMPMinaConnection() {
-		return (RTMPMinaConnection) getRtmpConnManager().createConnection(EdgeRTMPMinaConnection.class);
+		return (RTMPMinaConnection) RTMPConnManager.getInstance().createConnection(EdgeRTMPMinaConnection.class);
 	}
 }
