@@ -455,5 +455,15 @@
 			<artifactId>red5-server</artifactId>
 			<version>1.0.2-RC3</version>
 		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-webapp</artifactId>
+			<version>9.1.0.RC1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-deploy</artifactId>
+			<version>7.0.0.M0</version>
+		</dependency>
 	</dependencies>
 </project>

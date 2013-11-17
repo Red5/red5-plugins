@@ -141,7 +141,8 @@ public class JettyLoader extends LoaderBase implements LoaderMXBean {
 			jetty = new Server();
 			jetty.setConnectors(connectors);
 			jetty.setHandler(handlers);
-			jetty.setThreadPool(threadPool);
+			// commented out by dominick
+//			jetty.setThreadPool(threadPool);
 			jetty.setStopAtShutdown(true);
 
 			LoaderBase.setApplicationLoader(new JettyApplicationLoader(jetty, applicationContext));
