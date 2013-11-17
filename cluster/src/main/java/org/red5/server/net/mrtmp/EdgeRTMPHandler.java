@@ -48,11 +48,12 @@ public class EdgeRTMPHandler extends RTMPHandler {
 	}
 
 	@Override
-	public void messageReceived(Object in, IoSession session) throws Exception {
-		RTMPConnection conn = (RTMPConnection) session.getAttribute(RTMPConnection.RTMP_CONNECTION_KEY);
-		RTMP state = (RTMP) session.getAttribute(ProtocolState.SESSION_KEY);
+	public void messageReceived(RTMPConnection conn, Packet packet) throws Exception {
+//		RTMPConnection conn = (RTMPConnection) session.getAttribute(RTMPConnection.RTMP_CONNECTION_KEY);
+//		RTMP state = (RTMP) session.getAttribute(ProtocolState.SESSION_KEY);
+		RTMP state = conn.getState();
 		IRTMPEvent message = null;
-		final Packet packet = (Packet) in;
+//		final Packet packet = (Packet) in;
 		message = packet.getMessage();
 		final Header header = packet.getHeader();
 		final Channel channel = conn.getChannel(header.getChannelId());
@@ -158,7 +159,7 @@ public class EdgeRTMPHandler extends RTMPHandler {
 			call.setResult(getStatus(NC_CONNECT_REJECTED));
 			Invoke reply = new Invoke();
 			reply.setCall(call);
-			reply.setInvokeId(invoke.getInvokeId());
+			reply.setTransactionId(invoke.getTransactionId());
 			channel.write(reply);
 			conn.close();
 		} else {
@@ -198,7 +199,7 @@ public class EdgeRTMPHandler extends RTMPHandler {
 	}
 
 	@Override
-	public void connectionClosed(RTMPConnection conn, RTMP state) {
+	public void connectionClosed(RTMPConnection conn) {
 		// the state change will be maintained inside connection object.
 		conn.close();
 	}

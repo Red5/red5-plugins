@@ -1,5 +1,5 @@
 /*
- * RED5 Open Source Flash Server - http://code.google.com/p/red5/
+0 * RED5 Open Source Flash Server - http://code.google.com/p/red5/
  * 
  * Copyright 2006-2012 by respective authors (see below). All rights reserved.
  * 
@@ -30,6 +30,7 @@ import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.logging.LoggingFilter;
 import org.red5.server.api.IConnection;
 import org.red5.server.net.rtmp.IRTMPHandler;
+import org.red5.server.net.rtmp.RTMPConnection;
 import org.red5.server.net.rtmp.RTMPOriginConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -133,7 +134,7 @@ public class OriginMRTMPHandler extends IoHandlerAdapter {
 						conn = null;
 					} else {
 						MRTMPPacket.RTMPBody rtmpBody = (MRTMPPacket.RTMPBody) body;
-						handler.messageReceived(rtmpBody.getRtmpPacket(), session);
+						handler.messageReceived((RTMPConnection)conn, packet);
 					}
 				} else {
 					log.warn("Handle on a non-existent origin connection!");

@@ -82,13 +82,13 @@ public class RTMPOriginConnection extends RTMPConnection {
 		// no need to do again here.
 	}
 
-	@Override
-	public void rawWrite(IoBuffer out) {
-		// won't write any raw data on the wire
-		// XXX should we throw exception here
-		// to indicate an abnormal state ?
-		log.warn("Erhhh... Raw write. Shouldn't be in here!");
-	}
+//	@Override
+//	public void rawWrite(IoBuffer out) {
+//		// won't write any raw data on the wire
+//		// XXX should we throw exception here
+//		// to indicate an abnormal state ?
+//		log.warn("Erhhh... Raw write. Shouldn't be in here!");
+//	}
 
 	@Override
 	public void write(Packet packet) {
@@ -111,10 +111,10 @@ public class RTMPOriginConnection extends RTMPConnection {
 		// no need to track RTT here.
 	}
 
-	@Override
-	protected void startWaitForHandshake(ISchedulingService service) {
-		// no handshake in MRTMP, simply ignore
-	}
+//	@Override
+//	protected void startWaitForHandshake(ISchedulingService service) {
+//		// no handshake in MRTMP, simply ignore
+//	}
 
 	@Override
 	synchronized public void close() {
@@ -133,6 +133,12 @@ public class RTMPOriginConnection extends RTMPConnection {
 			state.setState(RTMP.STATE_DISCONNECTED);
 			super.close();
 		}
+	}
+
+	@Override
+	public void writeRaw(IoBuffer out) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 }

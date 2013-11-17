@@ -24,7 +24,7 @@ import org.red5.server.net.rtmp.message.Packet;
 /**
  * @author Steven Gong (steven.gong@gmail.com)
  */
-public class MRTMPPacket {
+public class MRTMPPacket extends Packet {
 	public static final short CONNECT = 0;
 	public static final short CLOSE = 1;
 	public static final short RTMP = 2;
@@ -37,7 +37,7 @@ public class MRTMPPacket {
 	private Header header;
 	private Body body;
 	
-	static public class Header {
+	static public class Header extends org.red5.server.net.rtmp.message.Header {
 		private short type;
 		private short bodyEncoding;
 		private boolean dynamic;
