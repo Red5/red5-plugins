@@ -455,5 +455,10 @@
 			<artifactId>red5-server</artifactId>
 			<version>1.0.2-RC3</version>
 		</dependency>
+		<dependency>
+			<groupId>net.sourceforge.winstone</groupId>
+			<artifactId>winstone</artifactId>
+			<version>0.9.10</version>
+		</dependency>
 	</dependencies>
 </project>
