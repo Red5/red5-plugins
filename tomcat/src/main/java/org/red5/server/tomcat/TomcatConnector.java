@@ -85,7 +85,7 @@ public class TomcatConnector {
 	 * Returns a local address and port.
 	 * 
 	 * @param port
-	 * @return
+	 * @return InetSocketAddress
 	 */
 	private InetSocketAddress bindLocal(int port) throws Exception {
 		return new InetSocketAddress("127.0.0.1", port);
@@ -139,9 +139,10 @@ public class TomcatConnector {
 	}
 
 	/**
-	 * The address to which we will bind the connector.
+	 * The address and port to which we will bind the connector. If the port is not supplied the default of 5080 will be used.
+	 * The address and port are to be separated by a colon ':'.
 	 * 
-	 * @param address
+	 * @param addressAndPort
 	 */
 	public void setAddress(String addressAndPort) {
 		try {

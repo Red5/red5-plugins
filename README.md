@@ -30,3 +30,9 @@ mvn eclipse:eclipse
 3. Access the right-click menu and select "Configure" and then "Convert to Maven Project".
 4. Now the project will build automatically, if you have the maven plugin installed.
 
+If you see this Warning in eclipse:
+```
+Build path specifies execution environment JavaSE-1.6. There are no JREs installed in the workspace that are strictly compatible with this environment.
+```
+Go to the project properties and change the "JRE System Library" to workspace default.
+

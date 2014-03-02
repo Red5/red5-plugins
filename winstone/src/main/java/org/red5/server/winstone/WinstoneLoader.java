@@ -346,7 +346,8 @@ public class WinstoneLoader extends LoaderBase implements ApplicationContextAwar
 	/**
 	 * Shut server down.
 	 */
-	public void shutdown() {
+	@Override
+	public void destroy() throws Exception {
 		log.info("Shutting down Winstone context");
 		//run through the applications and ensure that spring is told
 		//to commence shutdown / disposal
