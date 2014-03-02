@@ -2,68 +2,19 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>authplugin</artifactId>
+	<artifactId>winstoneplugin</artifactId>
 	<packaging>jar</packaging>
-	<name>Red5 :: authplugin</name>
-	<description>The Red5 Authplugin</description>
-	<groupId>org.red5</groupId>
-	<version>1.0.2</version>
-	<url>https://code.google.com/p/red5/</url>
-	<inceptionYear>2005</inceptionYear>
-	<organization>
-		<name>Red5</name>
-		<url>https://code.google.com/p/red5</url>
-	</organization>
-	<licenses>
-		<license>
-			<name>Apache 2</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-			<distribution>repo</distribution>
-			<comments>A business-friendly OSS license</comments>
-		</license>
-	</licenses>
-	<mailingLists>
-		<mailingList>
-			<name>red5-interest</name>
-			<post>https://groups.google.com/forum/?fromgroups#!forum/red5interest</post>
-		</mailingList>
-	</mailingLists>
-	<issueManagement>
-		<system>google-code</system>
-		<url>https://code.google.com/p/red5/issues/list</url>
-	</issueManagement>
-	<developers>
-		<developer>
-			<id>Dominick Accattato</id>
-			<email>dominick@red5.org</email>
-		</developer>
-		<developer>
-			<id>Paul Gregoire</id>
-			<email>mondain@gmail.com</email>
-		</developer>
-		<developer>
-			<id>Dan Rossi</id>
-			<email>electroteque@gmail.com</email>
-		</developer>
-		<developer>
-			<id>Tiago Jacobs</id>
-			<email>tiago.jacobs@gmail.com</email>
-		</developer>
-	</developers>
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<red5-client.version>1.0.2-SNAPSHOT</red5-client.version>
-		<spring.version>3.1.1.RELEASE</spring.version>
-		<slf4j.version>1.7.5</slf4j.version>
-		<mina.version>2.0.7</mina.version>
-		<logback.version>1.0.13</logback.version>
-		<junit.version>4.10</junit.version>
-	</properties>
-	<scm>
-		<url>https://github.com/mondain/red5-io</url>
-		<connection>scm:git:git://github.com/mondain/red5-io.git</connection>
-		<developerConnection>scm:git:git@github.com:mondain/red5-io.git</developerConnection>		
-	</scm>
+	<name>winstoneplugin</name>
+	<description>The Red5 Winstone plugin</description>
+	<version>1.1</version>
+	<url>https://github.com/Red5/red5-plugins/tree/master/winstone</url>
+	<description>Winstone web container plugin.</description>
+	<parent>
+		<groupId>org.red5</groupId>
+		<artifactId>plugins</artifactId>
+		<version>1.0</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
 	<build>
 		<defaultGoal>install</defaultGoal>
 		<directory>${basedir}/target</directory>
