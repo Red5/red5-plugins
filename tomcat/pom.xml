@@ -5,7 +5,7 @@
 	<artifactId>tomcatplugin</artifactId>
 	<packaging>jar</packaging>
 	<name>tomcatplugin</name>
-	<version>1.6</version>
+	<version>1.7</version>
 	<url>https://github.com/Red5/red5-plugins/tree/master/tomcat</url>
 	<description>Tomcat web container plugin.</description>
 	<parent>

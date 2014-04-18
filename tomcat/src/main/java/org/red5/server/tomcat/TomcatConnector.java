@@ -1,6 +1,7 @@
 package org.red5.server.tomcat;
 
 import java.net.InetSocketAddress;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.catalina.connector.Connector;
@@ -107,6 +108,9 @@ public class TomcatConnector {
 	 * @param props connection properties to set
 	 */
 	public void setConnectionProperties(Map<String, String> props) {
+		if (connectionProperties == null) {
+			this.connectionProperties = new HashMap<String, String>();
+		}
 		this.connectionProperties.putAll(props);
 	}
 
