@@ -7,7 +7,7 @@
 	<name>tomcatplugin</name>
 	<version>1.7</version>
 	<url>https://github.com/Red5/red5-plugins/tree/master/tomcat</url>
-	<description>Tomcat web container plugin.</description>
+	<description>Tomcat web container plugin</description>
 	<parent>
 		<groupId>org.red5</groupId>
 		<artifactId>plugins</artifactId>
@@ -15,25 +15,13 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<properties>
-		<tomcat.version>7.0.50</tomcat.version>
-		<ecj.version>4.3.1</ecj.version>
+		<tomcat.version>7.0.57</tomcat.version>
+		<ecj.version>4.4</ecj.version>
 	</properties>
 	<build>
 		<defaultGoal>install</defaultGoal>
 		<directory>${basedir}/target</directory>
 		<plugins>
-			<plugin>
-				<artifactId>maven-eclipse-plugin</artifactId>
-				<version>2.7</version>
-				<configuration>
-					<downloadSources>true</downloadSources>
-					<classpathContainers>
-						<classpathContainer>org.eclipse.jdt.launching.JRE_CONTAINER</classpathContainer>
-						<classpathContainer>org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER</classpathContainer>
-						<classpathContainer>org.eclipse.jdt.junit.JUNIT_CONTAINER/4</classpathContainer>
-					</classpathContainers>
-				</configuration>
-			</plugin>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.3.2</version>
@@ -44,19 +32,55 @@
 					<target>1.6</target>
 				</configuration>
 			</plugin>
-			<plugin>
-				<artifactId>maven-source-plugin</artifactId>
-				<version>2.1.2</version>
-				<executions>
-					<execution>
-						<id>attach-sources</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>jar-no-fork</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.4</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.10.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <verbose>true</verbose>
+                    <failOnError>false</failOnError>
+                    <sourcepath>${basedir}/src/main/java</sourcepath>
+                    <includeDependencySources>false</includeDependencySources>
+                    <dependencySourceIncludes>
+                        <dependencySourceInclude>org.red5:*</dependencySourceInclude>
+                    </dependencySourceIncludes>
+                    <detectOfflineLinks>false</detectOfflineLinks>
+                    <stylesheetfile>javadoc.css</stylesheetfile>
+                    <links>
+                        <link>http://download.oracle.com/javase/7/docs/api</link>
+                        <link>http://docs.spring.io/spring/docs/4.0.3.RELEASE/javadoc-api</link>
+                        <link>http://www.slf4j.org/api</link>
+                        <link>http://logging.apache.org/log4j/1.2/apidocs</link>
+                    </links>
+                    <tags>
+                        <tag>
+                            <name>todo</name>
+                            <!-- todo tag for all places -->
+                            <placement>a</placement>
+                            <head>To do:</head>
+                        </tag>
+                    </tags>
+                </configuration>
+            </plugin>
 			<plugin>
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>2.4</version>
@@ -101,49 +125,6 @@
 			<plugin>
 				<artifactId>maven-project-info-reports-plugin</artifactId>
 				<version>2.4</version>
-			</plugin>
-			<plugin>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>2.8.1</version>
-				<executions>
-					<execution>
-						<id>javadoc-jar</id>
-						<phase>package</phase>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<verbose>true</verbose>
-					<failOnError>false</failOnError>
-					<sourcepath>${basedir}/src/main/java</sourcepath>
-					<includeDependencySources>false</includeDependencySources>
-					<dependencySourceIncludes>
-						<dependencySourceInclude>org.red5:*</dependencySourceInclude>
-					</dependencySourceIncludes>
-					<detectOfflineLinks>false</detectOfflineLinks>
-					<stylesheetfile>javadoc.css</stylesheetfile>
-					<links>
-						<link>http://download.oracle.com/javase/6/docs/api</link>
-						<link>http://jetty.codehaus.org/jetty/jetty-6/apidocs</link>
-						<link>http://mina.apache.org/report/trunk/apidocs</link>
-						<link>http://static.springsource.org/spring/docs/3.0.x/api</link>
-						<link>http://www.slf4j.org/api</link>
-						<link>http://logging.apache.org/log4j/1.2/apidocs</link>
-						<link>http://groovy.codehaus.org/api</link>
-						<link>http://tomcat.apache.org/tomcat-6.0-doc/api</link>
-						<link>http://ehcache.org/apidocs</link>
-					</links>
-					<tags>
-						<tag>
-							<name>todo</name>
-							<!-- todo tag for all places -->
-							<placement>a</placement>
-							<head>To do:</head>
-						</tag>
-					</tags>
-				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.felix</groupId>
@@ -264,10 +245,6 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-aop</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-asm</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
