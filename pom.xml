@@ -16,6 +16,7 @@
 	</organization>
 	<modules>
 		<module>tomcat</module>
+		<module>adminplugin</module>
 		<!-- 
 		<module>undertow</module>
 		<module>winstone</module>
