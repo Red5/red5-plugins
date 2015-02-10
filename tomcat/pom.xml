@@ -23,13 +23,14 @@
 		<directory>${basedir}/target</directory>
 		<plugins>
 			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
-				<configuration>
-					<compilerVersion>1.6</compilerVersion>
-					<fork>true</fork>
-					<source>1.6</source>
-					<target>1.6</target>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <compilerVersion>1.6</compilerVersion>
+                    <fork>true</fork>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                    <executable>${maven.compiler.executable}</executable>
 				</configuration>
 			</plugin>
             <plugin>
