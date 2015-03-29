@@ -15,10 +15,10 @@
  */
 package org.red5.server.mqtt.codec.parser;
 
-import java.io.UnsupportedEncodingException;
-
 import static org.red5.server.mqtt.codec.MQTTProtocol.VERSION_3_1;
 import static org.red5.server.mqtt.codec.MQTTProtocol.VERSION_3_1_1;
+
+import java.io.UnsupportedEncodingException;
 
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
@@ -28,6 +28,8 @@ import org.eclipse.moquette.proto.messages.ConnectMessage;
 import org.red5.server.mqtt.codec.MQTTDecoder;
 import org.red5.server.mqtt.codec.MQTTProtocol;
 import org.red5.server.mqtt.codec.exception.CorruptedFrameException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Connect decoder.
@@ -36,6 +38,8 @@ import org.red5.server.mqtt.codec.exception.CorruptedFrameException;
  * @author Paul Gregoire
  */
 public class ConnectDecoder extends DemuxDecoder {
+
+	private static final Logger log = LoggerFactory.getLogger(ConnectDecoder.class);
 
 	public static final String CONNECT_STATUS = "connected";
 
@@ -49,8 +53,10 @@ public class ConnectDecoder extends DemuxDecoder {
 			return;
 		}
 		int remainingLength = message.getRemainingLength();
+		log.trace("remainingLength: {}", remainingLength);
 		int start = in.markValue();
 		int protocolNameLen = in.getUnsignedShort();
+		log.trace("protocolNameLen: {}", protocolNameLen);
 		byte[] encProtoName;
 		String protoName;
 		switch (protocolNameLen) {
@@ -92,7 +98,7 @@ public class ConnectDecoder extends DemuxDecoder {
 				//protocol broken
 				throw new CorruptedFrameException("Invalid protoName size: " + protocolNameLen);
 		}
-
+		log.trace("protoName: {}", protoName);
 		//ProtocolVersion 1 byte (value 0x03 for 3.1, 0x04 for 3.1.1)
 		message.setProcotolVersion(in.get());
 		if (message.getProcotolVersion() == VERSION_3_1_1) {

@@ -85,8 +85,10 @@ public class MQTTBroker implements ApplicationContextAware, InitializingBean, Di
 		IAuthenticator authenticator;
 		if (passwdFileName.isEmpty()) {
 			authenticator = new AcceptAllAuthenticator();
+			log.trace("Authentication accepting all");
 		} else {
 			authenticator = new FileAuthenticator(System.getProperty("user.home"), passwdFileName);
+			log.trace("Authentication using File: {}", passwdFileName);
 		}
 		messaging.setAuthenticator(authenticator);
 		// initialize messaging

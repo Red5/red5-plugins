@@ -21,6 +21,8 @@ import org.eclipse.moquette.proto.messages.AbstractMessage;
 import org.eclipse.moquette.proto.messages.ConnAckMessage;
 import org.red5.server.mqtt.codec.MQTTProtocol;
 import org.red5.server.mqtt.codec.exception.CorruptedFrameException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -28,14 +30,18 @@ import org.red5.server.mqtt.codec.exception.CorruptedFrameException;
  */
 public class ConnAckEncoder extends DemuxEncoder<ConnAckMessage> {
 
+	private static final Logger log = LoggerFactory.getLogger(ConnAckEncoder.class);
+
 	@Override
 	public IoBuffer encode(IoSession session, ConnAckMessage message) throws CorruptedFrameException {
-		IoBuffer out = IoBuffer.allocate(7);
+		log.trace("CONACK - return code: {} qos: {}", message.getReturnCode(), message.getQos());		
+		IoBuffer out = IoBuffer.allocate(4).setAutoExpand(true);
 		out.put((byte) (AbstractMessage.CONNACK << 4));
         out.put(MQTTProtocol.encodeRemainingLength(2));
 		out.put((byte) (message.isSessionPresent() ? 0x01 : 0x00));
 		out.put(message.getReturnCode());
 		out.flip();
+		log.trace("Encoded CONACK: {}", out);
 		return out;
 	}
 

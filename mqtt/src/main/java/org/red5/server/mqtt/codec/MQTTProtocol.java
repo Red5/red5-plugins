@@ -15,7 +15,9 @@
  */
 package org.red5.server.mqtt.codec;
 
+import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 
 import org.apache.mina.core.buffer.IoBuffer;
 import org.eclipse.moquette.proto.messages.AbstractMessage;
@@ -69,7 +71,7 @@ public class MQTTProtocol {
 	 *  
 	 * @return the decoded length or -1 if needed more data to decode the length field.
 	 */
-	public static int decodeRemainingLenght(IoBuffer in) {
+	public static int decodeRemainingLenght(IoBuffer in) {	
 		int multiplier = 1;
 		int value = 0;
 		byte digit;
@@ -81,6 +83,7 @@ public class MQTTProtocol {
 			value += (digit & 0x7F) * multiplier;
 			multiplier *= 128;
 		} while ((digit & 0x80) != 0);
+		log.trace("Decoded remaining length: {}", value);
 		return value;
 	}
 
@@ -94,18 +97,18 @@ public class MQTTProtocol {
 		if (value > MAX_LENGTH_LIMIT || value < 0) {
 			throw new CorruptedFrameException("Value should in range 0.." + MAX_LENGTH_LIMIT + " found " + value);
 		}
-		byte[] encoded = new byte[4];
-		byte digit;
-		int i = 0;
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		do {
-			digit = (byte) (value % 128);
+			byte digit = (byte) (value % 128);
 			value = value / 128;
 			// if there are more digits to encode, set the top bit of this digit
 			if (value > 0) {
-				digit = (byte) (digit | 0x80);
+				digit |= 0x80;
 			}
-			encoded[i++] = digit;
+			baos.write(digit);
 		} while (value > 0);
+		byte[] encoded = baos.toByteArray();
+		log.trace("Encoded remaining length: {}", Arrays.toString(encoded));
 		return encoded;
 	}
 
@@ -136,7 +139,7 @@ public class MQTTProtocol {
 		try {
 			byte[] raw = str.getBytes("UTF-8");
 			//Utils.writeWord(out, raw.length);
-			out.putShort((short) raw.length);
+			out.putUnsigned((short) raw.length);
 			out.put(raw);
 			out.flip();
 		} catch (UnsupportedEncodingException ex) {

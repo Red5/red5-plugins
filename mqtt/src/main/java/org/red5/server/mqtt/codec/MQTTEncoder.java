@@ -81,6 +81,7 @@ public class MQTTEncoder extends ProtocolEncoderAdapter {
         if (encoder != null) {
             IoBuffer bb = encoder.encode(session, msg);
             out.write(bb);
+            out.flush();
         } else {
             throw new CorruptedFrameException("Can't find any suitable decoder for message type: " + msg.getMessageType());
         }

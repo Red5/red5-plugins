@@ -21,6 +21,8 @@ import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 import org.eclipse.moquette.proto.messages.AbstractMessage;
 import org.red5.server.mqtt.codec.MQTTProtocol;
 import org.red5.server.mqtt.codec.exception.CorruptedFrameException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base demux decoder.
@@ -29,6 +31,8 @@ import org.red5.server.mqtt.codec.exception.CorruptedFrameException;
  * @author Paul Gregoire
  */
 public abstract class DemuxDecoder {
+
+	private static final Logger log = LoggerFactory.getLogger(DemuxDecoder.class);
 
 	public abstract void decode(IoSession session, IoBuffer in, ProtocolDecoderOutput out) throws Exception;
 
@@ -68,6 +72,7 @@ public abstract class DemuxDecoder {
 		}
 		boolean dupFlag = ((byte) ((h1 & 0x0008) >> 3) == 1);
 		byte qosLevel = (byte) ((h1 & 0x0006) >> 1);
+		log.trace("Message - qos level: {}", qosLevel);
 		boolean retainFlag = ((byte) (h1 & 0x0001) == 1);
 		int remainingLength = MQTTProtocol.decodeRemainingLenght(in);
 		if (remainingLength == -1) {

@@ -30,6 +30,7 @@
 	 
 	 
     <bean id="mqttBroker" class="org.red5.server.mqtt.MQTTBroker" depends-on="mqttTransport">
+        <property name="dbStorePath" value="/opt/red5/mqtt_store.mapdb"/>
         <property name="passwdFileName" value=""/>
     </bean>
 	 

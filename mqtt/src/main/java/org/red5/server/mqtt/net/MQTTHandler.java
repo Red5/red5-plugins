@@ -76,11 +76,12 @@ public class MQTTHandler extends IoHandlerAdapter {
 	                case PUBREL:
 	                case DISCONNECT:
 	                case PUBACK:
+	                	// lookup the channel based on the session or create a new one
                         if (!channelMapper.containsKey(sessionId)) {
                             channelMapper.put(sessionId, new MinaChannel(session));
                         }
                         MinaChannel channel = channelMapper.get(sessionId);
-	                    
+	                    // pass to messaging for handling
 	                    messaging.handleProtocolMessage(channel, msg);
 	                    break;
 	                case PINGREQ:
@@ -101,6 +102,10 @@ public class MQTTHandler extends IoHandlerAdapter {
     public void messageSent(IoSession session, Object message) throws Exception {
 		log.trace("Message sent on session: {}", session.getId());
 		log.trace("Session read: {} write: {}", session.getReadBytes(), session.getWrittenBytes());
+		if (message instanceof AbstractMessage) {
+			AbstractMessage msg = (AbstractMessage) message;
+			log.info("Sent a message of type {}", Utils.msgType2String(msg.getMessageType()));
+		}
     }
 	
 	/**
