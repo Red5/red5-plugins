@@ -51,10 +51,8 @@ public class MQTTProtocol {
 		if (in.remaining() < 1) {
 			return false;
 		}
-		//byte h1 = in.get();
-		//byte messageType = (byte) ((h1 & 0x00F0) >> 4);
 		in.skip(1); //skip the messageType byte
-		int remainingLength = decodeRemainingLenght(in);
+		int remainingLength = decodeRemainingLength(in);
 		if (remainingLength == -1) {
 			return false;
 		}
@@ -62,7 +60,6 @@ public class MQTTProtocol {
 		if (in.remaining() < remainingLength) {
 			return false;
 		}
-		//return messageType == type ? MessageDecoderResult.OK : MessageDecoderResult.NOT_OK;
 		return true;
 	}
 
@@ -71,7 +68,7 @@ public class MQTTProtocol {
 	 *  
 	 * @return the decoded length or -1 if needed more data to decode the length field.
 	 */
-	public static int decodeRemainingLenght(IoBuffer in) {	
+	public static int decodeRemainingLength(IoBuffer in) {	
 		int multiplier = 1;
 		int value = 0;
 		byte digit;
@@ -121,8 +118,8 @@ public class MQTTProtocol {
 		if (in.remaining() < 2) {
 			return null;
 		}
-		//int strLen = Utils.readWord(in);
 		int strLen = in.getUnsignedShort();
+		log.trace("String length: {}", strLen);
 		if (in.remaining() < strLen) {
 			return null;
 		}
@@ -138,7 +135,6 @@ public class MQTTProtocol {
 		IoBuffer out = IoBuffer.allocate(2).setAutoExpand(true);
 		try {
 			byte[] raw = str.getBytes("UTF-8");
-			//Utils.writeWord(out, raw.length);
 			out.putUnsigned((short) raw.length);
 			out.put(raw);
 			out.flip();

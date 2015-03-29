@@ -50,7 +50,7 @@ public class UnsubscribeDecoder extends DemuxDecoder {
 		int readed = in.markValue() - start;
 		while (readed < message.getRemainingLength()) {
 			message.addTopicFilter(MQTTProtocol.decodeString(in));
-			readed = in.markValue() - start;
+			readed = in.position() - start;
 		}
 		if (message.topicFilters().isEmpty()) {
 			throw new CorruptedFrameException("unsubscribe MUST have got at least 1 topic");

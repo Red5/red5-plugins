@@ -16,12 +16,11 @@
 package org.eclipse.moquette.spi;
 
 import java.io.Serializable;
-import java.nio.ByteBuffer;
-import org.eclipse.moquette.spi.impl.events.PublishEvent;
-import org.eclipse.moquette.proto.messages.AbstractMessage;
-
 import java.util.Collection;
 import java.util.List;
+
+import org.eclipse.moquette.proto.messages.AbstractMessage;
+import org.eclipse.moquette.spi.impl.events.PublishEvent;
 
 /**
  * Defines the SPI to be implemented by a StorageService that handle persistence of messages
@@ -48,8 +47,8 @@ public interface IMessagesStore {
 			return m_qos;
 		}
 
-		public ByteBuffer getPayload() {
-			return (ByteBuffer) ByteBuffer.allocate(m_payload.length).put(m_payload).flip();
+		public byte[] getPayload() {
+			return m_payload;
 		}
 
 		public String getTopic() {
@@ -65,7 +64,7 @@ public interface IMessagesStore {
 	/**
 	 * Persist the message. If the message is empty then the topic is cleaned, else it's stored.
 	 */
-	void storeRetained(String topic, ByteBuffer message, AbstractMessage.QOSType qos);
+	void storeRetained(String topic, byte[] message, AbstractMessage.QOSType qos);
 
 	/**
 	 * Return a list of retained messages that satisfy the condition.

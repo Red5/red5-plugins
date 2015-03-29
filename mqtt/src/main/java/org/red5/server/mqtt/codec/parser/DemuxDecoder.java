@@ -74,7 +74,7 @@ public abstract class DemuxDecoder {
 		byte qosLevel = (byte) ((h1 & 0x0006) >> 1);
 		log.trace("Message - qos level: {}", qosLevel);
 		boolean retainFlag = ((byte) (h1 & 0x0001) == 1);
-		int remainingLength = MQTTProtocol.decodeRemainingLenght(in);
+		int remainingLength = MQTTProtocol.decodeRemainingLength(in);
 		if (remainingLength == -1) {
 			return false;
 		}

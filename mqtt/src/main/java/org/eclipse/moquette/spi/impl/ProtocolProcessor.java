@@ -69,6 +69,7 @@ import com.lmax.disruptor.dsl.Disruptor;
 class ProtocolProcessor implements EventHandler<ValueEvent> {
 
 	static final class WillMessage {
+		
 		private final String topic;
 
 		private final ByteBuffer payload;
@@ -76,6 +77,13 @@ class ProtocolProcessor implements EventHandler<ValueEvent> {
 		private final boolean retained;
 
 		private final QOSType qos;
+
+		public WillMessage(String topic, byte[] payload, boolean retained, QOSType qos) {
+			this.topic = topic;
+			this.payload = ByteBuffer.wrap(payload);
+			this.retained = retained;
+			this.qos = qos;
+		}
 
 		public WillMessage(String topic, ByteBuffer payload, boolean retained, QOSType qos) {
 			this.topic = topic;
@@ -291,12 +299,12 @@ class ProtocolProcessor implements EventHandler<ValueEvent> {
 		String clientID = (String) session.getAttribute(Constants.ATTR_CLIENTID);
 		final String topic = msg.getTopicName();
 		final AbstractMessage.QOSType qos = msg.getQos();
-		final ByteBuffer message = msg.getPayload();
+		final byte[] message = msg.getPayload();
 		boolean retain = msg.isRetainFlag();
 		processPublish(clientID, topic, qos, message, retain, msg.getMessageID());
 	}
 
-	private void processPublish(String clientID, String topic, QOSType qos, ByteBuffer message, boolean retain, Integer messageID) {
+	private void processPublish(String clientID, String topic, QOSType qos, byte[] message, boolean retain, Integer messageID) {
 		LOG.info("PUBLISH from clientID <{}> on topic <{}> with QoS {}", clientID, topic, qos);
 
 		if (qos == AbstractMessage.QOSType.MOST_ONE) { //QoS0
@@ -341,10 +349,10 @@ class ProtocolProcessor implements EventHandler<ValueEvent> {
 		boolean retain = will.isRetained();
 		//NB it's a will publish, it needs a PacketIdentifier for this conn, default to 1
 		if (qos == AbstractMessage.QOSType.MOST_ONE) {
-			forward2Subscribers(topic, qos, message, retain, null);
+			forward2Subscribers(topic, qos, message.array(), retain, null);
 		} else {
 			int messageId = m_messagesStore.nextPacketID(clientID);
-			forward2Subscribers(topic, qos, message, retain, messageId);
+			forward2Subscribers(topic, qos, message.array(), retain, messageId);
 		}
 
 	}
@@ -352,7 +360,7 @@ class ProtocolProcessor implements EventHandler<ValueEvent> {
 	/**
 	 * Flood the subscribers with the message to notify. MessageID is optional and should only used for QoS 1 and 2
 	 * */
-	private void forward2Subscribers(String topic, AbstractMessage.QOSType qos, ByteBuffer origMessage, boolean retain, Integer messageID) {
+	private void forward2Subscribers(String topic, AbstractMessage.QOSType qos, byte[] origMessage, boolean retain, Integer messageID) {
 		LOG.debug("forward2Subscribers republishing to existing subscribers that matches the topic {}", topic);
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("content <{}>", DebugUtils.payload2Str(origMessage));
@@ -364,7 +372,8 @@ class ProtocolProcessor implements EventHandler<ValueEvent> {
 			}
 
 			LOG.debug("Broker republishing to client <{}> topic <{}> qos <{}>, active {}", sub.getClientId(), sub.getTopicFilter(), qos, sub.isActive());
-			ByteBuffer message = origMessage.duplicate();
+			byte[] message = new byte[origMessage.length];
+			System.arraycopy(origMessage, 0, message, 0, origMessage.length);
 			if (qos == AbstractMessage.QOSType.MOST_ONE && sub.isActive()) {
 				//QoS 0
 				//forwardPublishQoS0(sub.getClientId(), topic, qos, message, false);
@@ -393,7 +402,7 @@ class ProtocolProcessor implements EventHandler<ValueEvent> {
 		}
 	}
 
-	private void sendPublish(String clientId, String topic, AbstractMessage.QOSType qos, ByteBuffer message, boolean retained, Integer messageID) {
+	private void sendPublish(String clientId, String topic, AbstractMessage.QOSType qos, byte[] message, boolean retained, Integer messageID) {
 		LOG.debug("sendPublish invoked clientId <{}> on topic <{}> QoS {} retained {} messageID {}", clientId, topic, qos, retained, messageID);
 		PublishMessage pubMessage = new PublishMessage();
 		pubMessage.setRetainFlag(retained);
@@ -461,7 +470,7 @@ class ProtocolProcessor implements EventHandler<ValueEvent> {
 
 	/**
 	 * Second phase of a publish QoS2 protocol, sent by publisher to the broker. Search the stored message and publish to all interested subscribers.
-	 * */
+	 */
 	@MQTTMessage(message = PubRelMessage.class)
 	void processPubRel(ServerChannel session, PubRelMessage msg) {
 		String clientID = (String) session.getAttribute(Constants.ATTR_CLIENTID);

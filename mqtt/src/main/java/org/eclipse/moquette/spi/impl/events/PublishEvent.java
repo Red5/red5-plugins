@@ -17,66 +17,63 @@ package org.eclipse.moquette.spi.impl.events;
 
 import org.eclipse.moquette.proto.messages.AbstractMessage.QOSType;
 
-import java.nio.ByteBuffer;
-
 /**
- *
+ * Publish event.
+ * 
  * @author andrea
  */
 public class PublishEvent extends MessagingEvent {
-    String m_topic;
-    QOSType m_qos;
-    //byte[] m_message;
-    ByteBuffer m_message;
-    boolean m_retain;
-    String m_clientID;
-    //Optional attribute, available only fo QoS 1 and 2
-    int m_msgID;
+	
+	String m_topic;
 
-    public PublishEvent(String topic, QOSType qos, ByteBuffer message, boolean retain,
-                        String clientID, Integer msgID) {
-        m_topic = topic;
-        m_qos = qos;
-        m_message = message;
-        m_retain = retain;
-        m_clientID = clientID;
-        if (qos != QOSType.MOST_ONE) {
-            m_msgID = msgID;
-        }
-    }
-    
-    public String getTopic() {
-        return m_topic;
-    }
+	QOSType m_qos;
 
-    public QOSType getQos() {
-        return m_qos;
-    }
+	byte[] m_message;
 
-    public ByteBuffer getMessage() {
-        return m_message;
-    }
+	boolean m_retain;
 
-    public boolean isRetain() {
-        return m_retain;
-    }
-    
-    public String getClientID() {
-        return m_clientID;
-    }
+	String m_clientID;
 
-    public int getMessageID() {
-        return m_msgID;
-    }
+	//Optional attribute, available only for QoS 1 and 2
+	int m_msgID;
 
-    @Override
-    public String toString() {
-        return "PublishEvent{" +
-                "m_msgID=" + m_msgID +
-                ", m_clientID='" + m_clientID + '\'' +
-                ", m_retain=" + m_retain +
-                ", m_qos=" + m_qos +
-                ", m_topic='" + m_topic + '\'' +
-                '}';
-    }
+	public PublishEvent(String topic, QOSType qos, byte[] message, boolean retain, String clientID, Integer msgID) {
+		m_topic = topic;
+		m_qos = qos;
+		m_message = message;
+		m_retain = retain;
+		m_clientID = clientID;
+		if (qos != QOSType.MOST_ONE) {
+			m_msgID = msgID;
+		}
+	}
+
+	public String getTopic() {
+		return m_topic;
+	}
+
+	public QOSType getQos() {
+		return m_qos;
+	}
+
+	public byte[] getMessage() {
+		return m_message;
+	}
+
+	public boolean isRetain() {
+		return m_retain;
+	}
+
+	public String getClientID() {
+		return m_clientID;
+	}
+
+	public int getMessageID() {
+		return m_msgID;
+	}
+
+	@Override
+	public String toString() {
+		return "PublishEvent{" + "m_msgID=" + m_msgID + ", m_clientID='" + m_clientID + '\'' + ", m_retain=" + m_retain + ", m_qos=" + m_qos + ", m_topic='" + m_topic + '\'' + '}';
+	}
 }

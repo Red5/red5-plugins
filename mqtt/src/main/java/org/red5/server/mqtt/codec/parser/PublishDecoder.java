@@ -15,8 +15,6 @@
  */
 package org.red5.server.mqtt.codec.parser;
 
-import java.nio.ByteBuffer;
-
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
@@ -73,16 +71,17 @@ public class PublishDecoder extends DemuxDecoder {
 		if (message.getQos() == AbstractMessage.QOSType.LEAST_ONE || message.getQos() == AbstractMessage.QOSType.EXACTLY_ONCE) {
 			message.setMessageID(in.getUnsignedShort());
 		}
-		int stopPos = in.markValue();
+		int stopPos = in.position();
 		//read the payload
 		int payloadSize = remainingLength - (stopPos - startPos - 2) + (MQTTProtocol.numBytesToEncode(remainingLength) - 1);
+		LOG.info("payload size: {}", payloadSize);
 		if (in.remaining() < payloadSize) {
 			in.reset();
 			return;
 		}
-		byte[] b = new byte[payloadSize];
-		in.get(b);
-		message.setPayload(ByteBuffer.wrap(b));
+		byte[] payload = new byte[payloadSize];
+		in.get(payload);
+		message.setPayload(payload);
 		out.write(message);
 	}
 

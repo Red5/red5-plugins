@@ -21,6 +21,8 @@ import org.eclipse.moquette.proto.messages.AbstractMessage;
 import org.eclipse.moquette.proto.messages.PublishMessage;
 import org.red5.server.mqtt.codec.MQTTProtocol;
 import org.red5.server.mqtt.codec.exception.CorruptedFrameException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Publish encoder.
@@ -30,6 +32,8 @@ import org.red5.server.mqtt.codec.exception.CorruptedFrameException;
  */
 public class PublishEncoder extends DemuxEncoder<PublishMessage> {
 
+	private static final Logger log = LoggerFactory.getLogger(PublishEncoder.class);
+
 	@Override
 	public IoBuffer encode(IoSession session, PublishMessage message) throws CorruptedFrameException {
 		if (message.getQos() == AbstractMessage.QOSType.RESERVED) {
@@ -38,26 +42,34 @@ public class PublishEncoder extends DemuxEncoder<PublishMessage> {
 		if (message.getTopicName() == null || message.getTopicName().isEmpty()) {
 			throw new IllegalArgumentException("Found a message with empty or null topic name");
 		}
-		IoBuffer variableHeaderBuff = IoBuffer.allocate(2);
+		IoBuffer variableHeaderBuff = IoBuffer.allocate(2).setAutoExpand(true);
 		try {
 			variableHeaderBuff.put(MQTTProtocol.encodeString(message.getTopicName()));
+			log.trace("Publish variableBuf 1: {}", variableHeaderBuff);
 			if (message.getQos() == AbstractMessage.QOSType.LEAST_ONE || message.getQos() == AbstractMessage.QOSType.EXACTLY_ONCE) {
 				if (message.getMessageID() == -1) {
 					throw new IllegalArgumentException("Found a message with QOS 1 or 2 and not MessageID setted");
 				}
-				variableHeaderBuff.putShort((short) message.getMessageID());
+				variableHeaderBuff.putUnsigned((short) message.getMessageID());
+				log.trace("Publish variableBuf 2: {}", variableHeaderBuff);
 			}
 			variableHeaderBuff.put(message.getPayload());
-			int variableHeaderSize = variableHeaderBuff.remaining();
+			log.trace("Publish variableBuf 3: {}", variableHeaderBuff);
+			variableHeaderBuff.flip();
+			log.trace("Publish variableBuf: {}", variableHeaderBuff);
+			byte[] payload = new byte[variableHeaderBuff.limit()];
+			variableHeaderBuff.get(payload);
+			int variableHeaderSize = payload.length;
+			log.trace("Publish variableHeaderSize: {}", variableHeaderSize);
 
 			byte flags = MQTTProtocol.encodeFlags(message);
 
-			IoBuffer out = IoBuffer.allocate(2 + variableHeaderSize);
+			IoBuffer out = IoBuffer.allocate(2 + variableHeaderSize).setAutoExpand(true);
 			out.put((byte) (AbstractMessage.PUBLISH << 4 | flags));
 			out.put(MQTTProtocol.encodeRemainingLength(variableHeaderSize));
-			variableHeaderBuff.flip();
-			out.put(variableHeaderBuff.array());
+			out.put(payload);
 			out.flip();
+			log.trace("Publish out: {}", out);
 			return out;
 		} finally {
 			variableHeaderBuff.free();

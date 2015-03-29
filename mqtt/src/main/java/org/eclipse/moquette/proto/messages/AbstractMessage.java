@@ -114,4 +114,5 @@ public abstract class AbstractMessage {
 	public void setRemainingLength(int remainingLength) {
 		this.m_remainingLength = remainingLength;
 	}
+	
 }

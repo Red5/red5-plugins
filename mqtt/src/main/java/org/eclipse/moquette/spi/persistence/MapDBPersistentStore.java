@@ -107,16 +107,9 @@ public class MapDBPersistentStore implements IMessagesStore, ISessionsStore {
 	}
 
 	@Override
-	public void storeRetained(String topic, ByteBuffer message, AbstractMessage.QOSType qos) {
-		if (!message.hasRemaining()) {
-			//clean the message from topic
-			m_retainedStore.remove(topic);
-		} else {
-			//store the message to the topic
-			byte[] raw = new byte[message.remaining()];
-			message.get(raw);
-			m_retainedStore.put(topic, new StoredMessage(raw, qos, topic));
-		}
+	public void storeRetained(String topic, byte[] message, AbstractMessage.QOSType qos) {
+		//store the message to the topic
+		m_retainedStore.put(topic, new StoredMessage(message, qos, topic));
 		m_db.commit();
 	}
 
@@ -307,9 +300,7 @@ public class MapDBPersistentStore implements IMessagesStore, ISessionsStore {
 
 	private PublishEvent convertFromStored(StoredPublishEvent evt) {
 		byte[] message = evt.getMessage();
-		ByteBuffer bbmessage = ByteBuffer.wrap(message);
-		//bbmessage.flip();
-		PublishEvent liveEvt = new PublishEvent(evt.getTopic(), evt.getQos(), bbmessage, evt.isRetain(), evt.getClientID(), evt.getMessageID());
+		PublishEvent liveEvt = new PublishEvent(evt.getTopic(), evt.getQos(), message, evt.isRetain(), evt.getClientID(), evt.getMessageID());
 		return liveEvt;
 	}
 }

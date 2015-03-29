@@ -24,12 +24,18 @@ import org.eclipse.moquette.proto.messages.AbstractMessage.QOSType;
 import org.eclipse.moquette.proto.messages.SubscribeMessage;
 import org.red5.server.mqtt.codec.MQTTProtocol;
 import org.red5.server.mqtt.codec.exception.CorruptedFrameException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
+ * Subscribe decoder.
  *
  * @author andrea
+ * @author Paul Gregoire
  */
 public class SubscribeDecoder extends DemuxDecoder {
+
+	private static final Logger log = LoggerFactory.getLogger(SubscribeDecoder.class);
 
 	@Override
 	public void decode(IoSession session, IoBuffer in, ProtocolDecoderOutput out) throws Exception {
@@ -47,10 +53,12 @@ public class SubscribeDecoder extends DemuxDecoder {
 		int start = in.markValue();
 		//read  messageIDs
 		message.setMessageID(in.getUnsignedShort());
-		int readed = in.markValue() - start;
+		int readed = in.position() - start;
+		log.trace("Subscribe start: {} readed: {}", start, readed);
 		while (readed < message.getRemainingLength()) {
 			decodeSubscription(in, message);
-			readed = in.markValue() - start;
+			readed = in.position() - start;
+			log.trace("Subscribe readed: {}", readed);
 		}
 		if (message.subscriptions().isEmpty()) {
 			throw new CorruptedFrameException("subscribe MUST have got at least 1 couple topic/QoS");
@@ -65,7 +73,9 @@ public class SubscribeDecoder extends DemuxDecoder {
 	 */
 	private void decodeSubscription(IoBuffer in, SubscribeMessage message) throws UnsupportedEncodingException, CorruptedFrameException {
 		String topic = MQTTProtocol.decodeString(in);
+		log.trace("Subscribe topic: {}", topic);
 		byte qosByte = in.get();
+		log.trace("QoS byte: {}", qosByte);
 		if ((qosByte & 0xFC) > 0) { //the first 6 bits is reserved => has to be 0
 			throw new CorruptedFrameException("subscribe MUST have QoS byte with reserved buts to 0, found " + Integer.toHexString(qosByte));
 		}

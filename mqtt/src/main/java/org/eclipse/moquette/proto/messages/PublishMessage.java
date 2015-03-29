@@ -15,43 +15,37 @@
  */
 package org.eclipse.moquette.proto.messages;
 
-import java.nio.ByteBuffer;
-
 /**
+ * Publish message.
  *
  * @author andrea
+ * @author Paul Gregoire
  */
 public class PublishMessage extends MessageIDMessage {
 
-    private String m_topicName;
-//    private Integer m_messageID; //could be null if Qos is == 0
-    private ByteBuffer m_payload;
+	private String m_topicName;
 
-    /*public Integer getMessageID() {
-        return m_messageID;
-    }
+	private byte[] m_payload;
 
-    public void setMessageID(Integer messageID) {
-        this.m_messageID = messageID;
-    }*/
-    
-    public PublishMessage() {
-        m_messageType = AbstractMessage.PUBLISH;
-    }
+	public PublishMessage() {
+		m_messageType = AbstractMessage.PUBLISH;
+	}
 
-    public String getTopicName() {
-        return m_topicName;
-    }
+	public String getTopicName() {
+		return m_topicName;
+	}
 
-    public void setTopicName(String topicName) {
-        this.m_topicName = topicName;
-    }
+	public void setTopicName(String topicName) {
+		this.m_topicName = topicName;
+	}
 
-    public ByteBuffer getPayload() {
-        return m_payload;
-    }
+	public byte[] getPayload() {
+		return m_payload;
+	}
 
-    public void setPayload(ByteBuffer payload) {
-        this.m_payload = payload;
-    }
+	public void setPayload(byte[] payload) {
+		this.m_payload = new byte[payload.length];
+		System.arraycopy(payload, 0, this.m_payload, 0, payload.length);
+	}
+
 }

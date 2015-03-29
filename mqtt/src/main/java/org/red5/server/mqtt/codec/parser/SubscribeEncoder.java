@@ -41,7 +41,7 @@ public class SubscribeEncoder extends DemuxEncoder<SubscribeMessage> {
 		IoBuffer out = null;
 		IoBuffer variableHeaderBuff = IoBuffer.allocate(4);
 		try {
-			variableHeaderBuff.putShort((short) message.getMessageID());
+			variableHeaderBuff.putUnsigned((short) message.getMessageID());
 			for (SubscribeMessage.Couple c : message.subscriptions()) {
 				variableHeaderBuff.put(MQTTProtocol.encodeString(c.getTopicFilter()));
 				variableHeaderBuff.put(c.getQos());

@@ -203,7 +203,7 @@ public class ConnectDecoder extends DemuxDecoder {
 			message.setUsername(userName);
 		}
 
-		readed = in.markValue() - start;
+		readed = in.position() - start;
 		if (readed == remainingLength) {
 			out.write(message);
 			return;

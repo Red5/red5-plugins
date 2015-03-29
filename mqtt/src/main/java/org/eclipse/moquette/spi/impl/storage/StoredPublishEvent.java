@@ -16,9 +16,9 @@
 package org.eclipse.moquette.spi.impl.storage;
 
 import java.io.Serializable;
-import java.nio.ByteBuffer;
-import org.eclipse.moquette.spi.impl.events.PublishEvent;
+
 import org.eclipse.moquette.proto.messages.AbstractMessage.QOSType;
+import org.eclipse.moquette.spi.impl.events.PublishEvent;
 
 /**
  * Publish event serialized to the DB.
@@ -48,11 +48,7 @@ public class StoredPublishEvent implements Serializable {
 		m_retain = wrapped.isRetain();
 		m_clientID = wrapped.getClientID();
 		m_msgID = wrapped.getMessageID();
-
-		ByteBuffer buffer = wrapped.getMessage();
-		m_message = new byte[buffer.remaining()];
-		buffer.get(m_message);
-		buffer.rewind();
+		m_message = wrapped.getMessage();
 	}
 
 	public String getTopic() {
