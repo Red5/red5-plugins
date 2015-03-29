@@ -1,0 +1,16 @@
+bin/
+tmp/
+target/
+.settings/
+.project
+.classpath
+.DS_Store
+
+*.class
+*.zip
+*.tar.gz
+*~
+
+local.properties
+
+refs.txt

@@ -16,6 +16,7 @@
 	</organization>
 	<modules>
 		<module>tomcat</module>
+		<module>mqtt</module>
 		<!-- 
 		<module>undertow</module>
 		<module>winstone</module>
@@ -64,8 +65,8 @@
     </developers>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<red5-server.version>1.0.4-SNAPSHOT</red5-server.version>
-		<red5-client.version>1.0.4-SNAPSHOT</red5-client.version>
+		<red5-server.version>1.0.5-RELEASE</red5-server.version>
+		<red5-client.version>1.0.5-RELEASE</red5-client.version>
         <spring.version>4.0.8.RELEASE</spring.version>
         <mina.version>2.0.8</mina.version>
         <slf4j.version>1.7.9</slf4j.version>
@@ -84,11 +85,6 @@
             <name>Sonatype Releases</name>
             <url>http://oss.sonatype.org/content/repositories/releases</url>
         </repository>    
-        <repository>
-            <id>osgeo</id>
-            <name>OSGeo repo - mainly for groboutils-core resolution</name>
-            <url>http://download.osgeo.org/webdav/geotools</url>
-        </repository>
         <repository>
             <id>maven2-repository.dev.java.net</id>
             <url>http://download.java.net/maven/2</url>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:lang="http://www.springframework.org/schema/lang"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+                           http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang-3.1.xsd">
+
+	<bean id="mqttTransport" class="org.red5.server.mqtt.net.MQTTTransport">
+	    <property name="port" value="1883"/>
+	</bean>
+	
+	<!-- 
+    <bean id="mqttTransportSecure" class="org.red5.server.mqtt.net.MQTTTransport">
+        <property name="secureConfig">
+            <bean id="mqttSecureConfig" class="org.red5.server.mqtt.SecureMQTTConfiguration">
+                <property name="keystoreType" value="JKS"/>
+                <property name="keystoreFile" value="conf/keystore"/>
+                <property name="keystorePassword" value="password"/>
+                <property name="truststoreFile" value="conf/truststore"/>
+                <property name="truststorePassword" value="password"/>
+            </bean>
+        </property>
+        <property name="addresses">
+            <list>
+                <value>192.168.1.174:8883</value>
+            </list>
+        </property>
+    </bean>	
+	 -->
+	 
+	 
+    <bean id="mqttBroker" class="org.red5.server.mqtt.MQTTBroker" depends-on="mqttTransport">
+        <property name="passwdFileName" value=""/>
+    </bean>
+	 
+</beans>
