@@ -32,10 +32,18 @@ mvn dependency:copy-dependencies
 This will download all the dependencies into the "target" directory under "dependency". The files located in that directory should be placed in the red5/plugins directory ONLY if they don't already exist within the red5/lib directory.
 
 
+Deploying to Red5
+-----------
+
+Drop the mqttplugin-1.0.jar into red5/plugins and place the following dependencies there as well:
+ * Disruptor disruptor-3.3.2.jar
+ * MapDb mapdb-1.0.6.jar
+
+
 Configuration
 --------------
 
-Add the MQTT nodes to your red5.xml or use an import. The mqtt.xml file is provided for your conveinence.
+Add the MQTT nodes to your red5.xml or use an import. The mqtt.xml file is provided for your convenience.
 
 To bind to one or many IP addresses and ports:
 ```xml
@@ -85,6 +93,21 @@ Broker node:
         <property name="dbStorePath" value="/opt/red5/mqtt_store.mapdb"/>
         <property name="passwdFileName" value=""/>
     </bean>
+```
+
+Test Client
+-----------
+
+I've provided a [Paho test client here](https://www.dropbox.com/s/avfd5kw7wm9a1vz/mqtt-client.tar.gz?dl=0) for getting up-to-speed quicker.
+
+To start the client:
+```
+java -jar org.eclipse.paho.mqtt.utility-1.0.2.jar
+```
+
+To enable the debug logs:
+```
+java -Djava.util.logging.config.file=./jsr47min.properties -jar org.eclipse.paho.mqtt.utility-1.0.2.jar
 ```
 
 Eclipse
