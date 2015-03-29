@@ -42,7 +42,7 @@ import com.lmax.disruptor.dsl.Disruptor;
 /**
  * Singleton class that orchestrate the execution of the protocol.
  *
- * Uses the LMAX Disruptor to serialize the incoming, requests, because it work in a evented fashion; the requests income from front Netty connectors and are dispatched to the ProtocolProcessor.
+ * Uses the LMAX Disruptor to serialize the incoming, requests, because it work in a evented fashion; the requests come from connectors and are dispatched to the ProtocolProcessor.
  *
  * @author andrea
  */
@@ -172,8 +172,6 @@ public class SimpleMessaging implements IMessaging, EventHandler<ValueEvent> {
 		LOG.debug("processStop invoked");
 		storageService.close();
 		LOG.debug("subscription tree {}", subscriptions.dumpTree());
-		//        m_eventProcessor.halt();
-		//        m_executor.shutdown();
 		subscriptions = null;
 		stopLatch.countDown();
 	}

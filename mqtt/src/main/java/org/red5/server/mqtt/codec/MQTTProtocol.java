@@ -132,17 +132,19 @@ public class MQTTProtocol {
 	 * Return the bytes with string encoded as MSB, LSB and UTF-8 encoded string content.
 	 */
 	public static byte[] encodeString(String str) {
-		IoBuffer out = IoBuffer.allocate(2).setAutoExpand(true);
+		byte[] out;
 		try {
 			byte[] raw = str.getBytes("UTF-8");
-			out.putUnsigned((short) raw.length);
-			out.put(raw);
-			out.flip();
+			out = new byte[raw.length + 2];
+			out[0] = (byte) ((raw.length >>> 8) & 0xFF);
+			out[1] = (byte) ((raw.length >>> 0) & 0xFF);
+			System.arraycopy(raw, 0, out, 2, raw.length);
+			log.trace("Encode string: {}", Arrays.toString(out));
 		} catch (UnsupportedEncodingException ex) {
 			log.error(null, ex);
 			return null;
 		}
-		return out.array();
+		return out;
 	}
 
 	/**

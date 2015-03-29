@@ -431,7 +431,6 @@ class ProtocolProcessor implements EventHandler<ValueEvent> {
 			throw new RuntimeException(String.format("Can't find a ConnectionDescriptor for client <%s> in cache <%s>", clientId, m_clientIDs));
 		}
 		LOG.debug("Session for clientId {} is {}", clientId, m_clientIDs.get(clientId).getSession());
-		//        m_clientIDs.get(clientId).getSession().write(pubMessage);
 		disruptorPublish(new OutputMessagingEvent(m_clientIDs.get(clientId).getSession(), pubMessage));
 	}
 
@@ -439,8 +438,6 @@ class ProtocolProcessor implements EventHandler<ValueEvent> {
 		LOG.trace("PUB <--PUBREC-- SRV sendPubRec invoked for clientID {} with messageID {}", clientID, messageID);
 		PubRecMessage pubRecMessage = new PubRecMessage();
 		pubRecMessage.setMessageID(messageID);
-
-		//        m_clientIDs.get(clientID).getSession().write(pubRecMessage);
 		disruptorPublish(new OutputMessagingEvent(m_clientIDs.get(clientID).getSession(), pubRecMessage));
 	}
 
@@ -460,8 +457,6 @@ class ProtocolProcessor implements EventHandler<ValueEvent> {
 			if (m_clientIDs.get(clientId) == null) {
 				throw new RuntimeException(String.format("Can't find a ConnectionDescriptor for client %s in cache %s", clientId, m_clientIDs));
 			}
-			//            LOG.debug("Session for clientId " + clientId + " is " + m_clientIDs.get(clientId).getSession());
-			//            m_clientIDs.get(clientId).getSession().write(pubAckMessage);
 			disruptorPublish(new OutputMessagingEvent(m_clientIDs.get(clientId).getSession(), pubAckMessage));
 		} catch (Throwable t) {
 			LOG.error(null, t);
@@ -498,7 +493,6 @@ class ProtocolProcessor implements EventHandler<ValueEvent> {
 		PubCompMessage pubCompMessage = new PubCompMessage();
 		pubCompMessage.setMessageID(messageID);
 
-		//        m_clientIDs.get(clientID).getSession().write(pubCompMessage);
 		disruptorPublish(new OutputMessagingEvent(m_clientIDs.get(clientID).getSession(), pubCompMessage));
 	}
 
@@ -512,8 +506,6 @@ class ProtocolProcessor implements EventHandler<ValueEvent> {
 		pubRelMessage.setMessageID(messageID);
 		pubRelMessage.setQos(AbstractMessage.QOSType.LEAST_ONE);
 
-		//        m_clientIDs.get(clientID).getSession().write(pubRelMessage);
-		//disruptorPublish(new OutputMessagingEvent(m_clientIDs.get(clientID).getSession(), pubRelMessage));
 		session.write(pubRelMessage);
 	}
 
@@ -534,7 +526,6 @@ class ProtocolProcessor implements EventHandler<ValueEvent> {
 			//cleanup topic subscriptions
 			cleanSession(clientID);
 		}
-		//        m_notifier.disconnect(evt.getSession());
 		m_clientIDs.remove(clientID);
 		session.close(true);
 

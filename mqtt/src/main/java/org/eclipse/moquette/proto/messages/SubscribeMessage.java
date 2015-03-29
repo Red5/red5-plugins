@@ -24,37 +24,40 @@ import java.util.List;
  */
 public class SubscribeMessage extends MessageIDMessage {
 
-    public static class Couple {
+	public static class Couple {
 
-        private byte m_qos;
-        private String m_topicFilter;
+		private byte m_qos;
 
-        public Couple(byte qos, String topic) {
-            m_qos = qos;
-            m_topicFilter = topic;
-        }
-        
-        public byte getQos() {
-            return m_qos;
-        }
+		private String m_topicFilter;
 
-        public String getTopicFilter() {
-            return m_topicFilter;
-        }
-    }
-    private List<Couple> m_subscriptions = new ArrayList<Couple>();
+		public Couple(byte qos, String topic) {
+			m_qos = qos;
+			m_topicFilter = topic;
+		}
 
-    public SubscribeMessage() {
-        //Subscribe has always QoS 1
-        m_messageType = AbstractMessage.SUBSCRIBE;
-        m_qos = AbstractMessage.QOSType.LEAST_ONE;
-    }
-    
-    public List<Couple> subscriptions() {
-        return m_subscriptions;
-    }
+		public byte getQos() {
+			return m_qos;
+		}
 
-    public void addSubscription(Couple subscription) {
-        m_subscriptions.add(subscription);
-    }
+		public String getTopicFilter() {
+			return m_topicFilter;
+		}
+	}
+
+	private List<Couple> m_subscriptions = new ArrayList<Couple>();
+
+	public SubscribeMessage() {
+		//Subscribe has always QoS 1
+		m_messageType = AbstractMessage.SUBSCRIBE;
+		m_qos = AbstractMessage.QOSType.LEAST_ONE;
+	}
+
+	public List<Couple> subscriptions() {
+		return m_subscriptions;
+	}
+
+	public void addSubscription(Couple subscription) {
+		m_subscriptions.add(subscription);
+	}
+	
 }

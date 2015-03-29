@@ -45,7 +45,7 @@ public class UnsubscribeEncoder extends DemuxEncoder<UnsubscribeMessage> {
 			for (String topic : message.topicFilters()) {
 				variableHeaderBuff.put(MQTTProtocol.encodeString(topic));
 			}
-			int variableHeaderSize = variableHeaderBuff.remaining();
+			int variableHeaderSize = variableHeaderBuff.limit();
 			byte flags = MQTTProtocol.encodeFlags(message);
 			out = IoBuffer.allocate(2 + variableHeaderSize);
 			out.put((byte) (AbstractMessage.UNSUBSCRIBE << 4 | flags));

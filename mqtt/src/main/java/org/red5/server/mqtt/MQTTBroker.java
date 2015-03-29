@@ -73,7 +73,7 @@ public class MQTTBroker implements ApplicationContextAware, InitializingBean, Di
 
 	private String dbStorePath = System.getProperty("user.home") + File.separator + "mqtt_store.mapdb";
 	
-	private String passwdFileName = "";
+	private String passwdFileName;
 	
 	@Override
     public void afterPropertiesSet() throws Exception {
@@ -83,7 +83,7 @@ public class MQTTBroker implements ApplicationContextAware, InitializingBean, Di
 		messaging.setMapStorage(mapStorage);
 		// setup auth
 		IAuthenticator authenticator;
-		if (passwdFileName.isEmpty()) {
+		if (passwdFileName == null || passwdFileName.isEmpty()) {
 			authenticator = new AcceptAllAuthenticator();
 			log.trace("Authentication accepting all");
 		} else {

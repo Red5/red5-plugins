@@ -32,7 +32,7 @@ public class UnsubAckEncoder extends DemuxEncoder<UnsubAckMessage> {
 
 	@Override
 	public IoBuffer encode(IoSession session, UnsubAckMessage message) throws CorruptedFrameException {
-		IoBuffer out = IoBuffer.allocate(3);
+		IoBuffer out = IoBuffer.allocate(4);
         out.put((byte) (AbstractMessage.UNSUBACK << 4));
         out.put(MQTTProtocol.encodeRemainingLength(2));
         out.putShort((short) message.getMessageID());

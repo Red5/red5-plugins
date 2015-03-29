@@ -32,7 +32,7 @@ public class PubRelEncoder extends DemuxEncoder<PubRelMessage> {
 
 	@Override
 	public IoBuffer encode(IoSession session, PubRelMessage message) throws CorruptedFrameException {
-		IoBuffer out = IoBuffer.allocate(2);
+		IoBuffer out = IoBuffer.allocate(4);
 		out.put((byte) (AbstractMessage.PUBREL << 4));
 		out.put(MQTTProtocol.encodeRemainingLength(2));
 		out.putShort((short) message.getMessageID());

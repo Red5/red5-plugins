@@ -45,29 +45,26 @@ public class PublishEncoder extends DemuxEncoder<PublishMessage> {
 		IoBuffer variableHeaderBuff = IoBuffer.allocate(2).setAutoExpand(true);
 		try {
 			variableHeaderBuff.put(MQTTProtocol.encodeString(message.getTopicName()));
-			log.trace("Publish variableBuf 1: {}", variableHeaderBuff);
 			if (message.getQos() == AbstractMessage.QOSType.LEAST_ONE || message.getQos() == AbstractMessage.QOSType.EXACTLY_ONCE) {
 				if (message.getMessageID() == -1) {
 					throw new IllegalArgumentException("Found a message with QOS 1 or 2 and not MessageID setted");
 				}
-				variableHeaderBuff.putUnsigned((short) message.getMessageID());
-				log.trace("Publish variableBuf 2: {}", variableHeaderBuff);
+				variableHeaderBuff.putShort((short) message.getMessageID());
 			}
-			variableHeaderBuff.put(message.getPayload());
-			log.trace("Publish variableBuf 3: {}", variableHeaderBuff);
+			//int lengthInBytes = MQTTProtocol.numBytesToEncode(variableHeaderBuff.limit());
+			//log.trace("lengthInBytes: {}", lengthInBytes);			
 			variableHeaderBuff.flip();
 			log.trace("Publish variableBuf: {}", variableHeaderBuff);
-			byte[] payload = new byte[variableHeaderBuff.limit()];
-			variableHeaderBuff.get(payload);
-			int variableHeaderSize = payload.length;
+			int variableHeaderSize = variableHeaderBuff.limit();
 			log.trace("Publish variableHeaderSize: {}", variableHeaderSize);
 
 			byte flags = MQTTProtocol.encodeFlags(message);
 
 			IoBuffer out = IoBuffer.allocate(2 + variableHeaderSize).setAutoExpand(true);
 			out.put((byte) (AbstractMessage.PUBLISH << 4 | flags));
-			out.put(MQTTProtocol.encodeRemainingLength(variableHeaderSize));
-			out.put(payload);
+			out.put(MQTTProtocol.encodeRemainingLength(variableHeaderSize + message.getPayload().length));
+			out.put(variableHeaderBuff);
+			out.put(message.getPayload());
 			out.flip();
 			log.trace("Publish out: {}", out);
 			return out;
