@@ -31,6 +31,7 @@ import javax.management.JMX;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -50,7 +51,7 @@ import org.apache.catalina.loader.WebappLoader;
 import org.apache.catalina.realm.JAASRealm;
 import org.apache.catalina.realm.NullRealm;
 import org.apache.catalina.realm.RealmBase;
-import org.apache.catalina.startup.Embedded;
+import org.apache.catalina.startup.Tomcat;
 import org.red5.logging.Red5LoggerFactory;
 import org.red5.server.ContextLoader;
 import org.red5.server.LoaderBase;
@@ -77,7 +78,6 @@ import org.w3c.dom.NodeList;
  * 
  * @author Paul Gregoire (mondain@gmail.com)
  */
-@SuppressWarnings("deprecation")
 @ManagedResource(objectName = "org.red5.server:type=TomcatLoader", description = "TomcatLoader")
 public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMXBean {
 
@@ -132,7 +132,7 @@ public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMX
 	/**
 	 * Embedded Tomcat service (like Catalina).
 	 */
-	protected static Embedded embedded;
+	protected static Tomcat embedded;
 
 	/**
 	 * Tomcat engine.
@@ -165,8 +165,9 @@ public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMX
 	 * @param path Path
 	 * @param docBase Document base
 	 * @return Catalina context (that is, web application)
+	 * @throws ServletException 
 	 */
-	public Context addContext(String path, String docBase) {
+	public Context addContext(String path, String docBase) throws ServletException {
 		return addContext(path, docBase, host);
 	}
 
@@ -177,10 +178,11 @@ public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMX
 	 * @param docBase Document base
 	 * @param host Host to add context to
 	 * @return Catalina context (that is, web application)
+	 * @throws ServletException 
 	 */
-	public Context addContext(String path, String docBase, Host host) {
+	public Context addContext(String path, String docBase, Host host) throws ServletException {
 		log.debug("Add context - path: {} docbase: {}", path, docBase);
-		org.apache.catalina.Context c = embedded.createContext(path, docBase);
+		org.apache.catalina.Context c = embedded.addWebapp(path, docBase);
 		if (c != null) {
 			log.trace("Context name: {} docbase: {} encoded: {}", new Object[] { c.getName(), c.getDocBase(), c.getEncodedPath() });
 			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -194,7 +196,6 @@ public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMX
 				c.setLoader(wldr);
 			}
 			log.debug("Context loader (check): {} Context classloader: {}", c.getLoader(), c.getLoader().getClassLoader());
-			host.addChild(c);
 			LoaderBase.setRed5ApplicationContext(getHostId() + path, new TomcatApplicationContext(c));
 		} else {
 			log.trace("Context is null");
@@ -232,7 +233,7 @@ public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMX
 	/**
 	 * Initialization.
 	 */
-	public void start() {
+	public void start() throws ServletException {
 		log.info("Loading tomcat");
 		//get a reference to the current threads classloader
 		final ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
@@ -243,18 +244,18 @@ public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMX
 		log.info("Config root: {}", confRoot);
 		// set catalina's home property
 		System.setProperty("CATALINA_HOME", serverRoot);
+		Boolean useNaming = Boolean.valueOf(System.getProperty("catalina.useNaming"));
 		// create one embedded (server) and use it everywhere
-		embedded = new Embedded();
-		embedded.createLoader(originalClassLoader);
-		embedded.setCatalinaBase(serverRoot);
-		embedded.setCatalinaHome(serverRoot);
-		embedded.setName(serviceEngineName);
-		log.trace("Classloader for embedded: {} TCL: {}", Embedded.class.getClassLoader(), originalClassLoader);
+		embedded = new Tomcat();
+		File serverRootF = new File(serverRoot);
+		embedded.getServer().setCatalinaBase(serverRootF);
+		embedded.getServer().setCatalinaHome(serverRootF);
+		embedded.setHost(host);
 
-		engine = embedded.createEngine();
+		engine = embedded.getEngine();
+		engine.setName(serviceEngineName);
 		engine.setDefaultHost(host.getName());
 		engine.setName(serviceEngineName);
-		engine.setService(embedded);
 
 		if (webappFolder == null) {
 			// Use default webapps directory
@@ -279,7 +280,7 @@ public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMX
 				Context ctx = null;
 				if ("/root".equals(dirName) || "/root".equalsIgnoreCase(dirName)) {
 					log.trace("Adding ROOT context");
-					ctx = addContext("/", webappContextDir);
+					ctx = addContext("", webappContextDir);
 				} else {
 					log.trace("Adding context from directory scan: {}", dirName);
 					ctx = addContext(dirName, webappContextDir);
@@ -355,14 +356,14 @@ public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMX
 		}
 		// set a realm on the "server" if specified
 		if (realm != null) {
-			embedded.setRealm(realm);
+			embedded.getEngine().setRealm(realm);
 		} else {
 			realm = new NullRealm();
-			embedded.setRealm(realm);
+			embedded.getEngine().setRealm(realm);
 		}
 		// use Tomcat jndi or not
-		if (System.getProperty("catalina.useNaming") != null) {
-			embedded.setUseNaming(Boolean.valueOf(System.getProperty("catalina.useNaming")));
+		if (Boolean.TRUE.equals(useNaming)) {
+			embedded.enableNaming();
 		}
 		// add the valves to the host
 		for (Valve valve : valves) {
@@ -377,7 +378,7 @@ public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMX
 			Container[] currentContexts = host.findChildren();
 			log.info("Adding {} additional hosts", hosts.size());
 			for (Host h : hosts) {
-				log.debug("Host - name: {} appBase: {} info: {}", new Object[] { h.getName(), h.getAppBase(), h.getInfo() });
+				log.debug("Host - name: {} appBase: {} info: {}", new Object[] { h.getName(), h.getAppBase(), h });
 				//add the contexts to each host
 				for (Container cont : currentContexts) {
 					Context c = (Context) cont;
@@ -388,14 +389,17 @@ public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMX
 			}
 		}
 		try {
-			// add new Engine to set of Engine for embedded server
-			embedded.addEngine(engine);
 			// loop through connectors and apply methods / props
+			boolean added = false;
 			for (TomcatConnector tomcatConnector : connectors) {
 				// get the connector
 				Connector connector = tomcatConnector.getConnector();
-        		// add new Connector to set of Connectors for embedded server, associated with Engine
-       			embedded.addConnector(connector);
+				// add new Connector to set of Connectors for embedded server, associated with Engine
+				if (!added) {
+					embedded.setConnector(connector);
+					added = true;
+				}
+				embedded.getService().addConnector(connector);
        			log.trace("Connector oName: {}", connector.getObjectName());
 			}
 		} catch (Exception ex) {
@@ -420,11 +424,9 @@ public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMX
 					final String prefix = servletContext.getRealPath("/");
 					log.debug("Path: {}", prefix);
 					try {
-						if (ctx.resourcesStart()) {
-							log.debug("Resources started");
-						}
-						log.debug("Context - available: {} privileged: {}, start time: {}, reloadable: {}",
-								new Object[] { ctx.getAvailable(), ctx.getPrivileged(), ctx.getStartTime(), ctx.getReloadable() });
+						ctx.resourcesStart();
+						log.debug("Context - privileged: {}, start time: {}, reloadable: {}",
+								new Object[] { ctx.getPrivileged(), ctx.getStartTime(), ctx.getReloadable() });
 						Loader cldr = ctx.getLoader();
 						log.debug("Loader delegate: {} type: {}", cldr.getDelegate(), cldr.getClass().getName());
 						if (log.isTraceEnabled()) {
@@ -499,7 +501,7 @@ public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMX
 												// this may interfere with other concurrently loaded jaas realms
 												System.setProperty("java.security.auth.login.config", prefix + "WEB-INF/jaas.config");
 											}
-											log.debug("Realm info: {} path: {}", contextRealm.getInfo(), ((RealmBase) contextRealm).getRealmPath());
+											log.debug("Realm info: {} path: {}", contextRealm, ((RealmBase) contextRealm).getRealmPath());
 										}
 									}
 									appctx.start();
@@ -551,8 +553,9 @@ public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMX
 	 * basically a stripped down version of start().
 	 * 
 	 * @return true on success
+	 * @throws ServletException 
 	 */
-	public boolean startWebApplication(String applicationName) {
+	public boolean startWebApplication(String applicationName) throws ServletException {
 		log.info("Starting Tomcat - Web application");
 		boolean result = false;
 		//get a reference to the current threads classloader
@@ -590,7 +593,7 @@ public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMX
 		log.debug("Path: {}", prefix);
 
 		try {
-			Loader cldr = ctx.getLoader();
+			Loader cldr = ((Context) ctx).getLoader();
 			log.debug("Loader delegate: {} type: {}", cldr.getDelegate(), cldr.getClass().getName());
 			if (cldr instanceof WebappLoader) {
 				log.debug("WebappLoader class path: {}", ((WebappLoader) cldr).getClasspath());
@@ -725,11 +728,12 @@ public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMX
 	 * Set additional contexts.
 	 * 
 	 * @param contexts Map of contexts
+	 * @throws ServletException 
 	 */
-	public void setContexts(Map<String, String> contexts) {
+	public void setContexts(Map<String, String> contexts) throws ServletException {
 		log.debug("setContexts: {}", contexts.size());
 		for (Map.Entry<String, String> entry : contexts.entrySet()) {
-			host.addChild(embedded.createContext(entry.getKey(), webappFolder + entry.getValue()));
+			host.addChild(embedded.addWebapp(entry.getKey(), webappFolder + entry.getValue()));
 		}
 	}
 
@@ -738,7 +742,7 @@ public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMX
 	 * 
 	 * @param embedded Embedded object
 	 */
-	public void setEmbedded(Embedded embedded) {
+	public void setEmbedded(Tomcat embedded) {
 		log.info("Setting embedded: {}", embedded.getClass().getName());
 		TomcatLoader.embedded = embedded;
 	}
@@ -748,7 +752,7 @@ public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMX
 	 * 
 	 * @return Embedded object
 	 */
-	public Embedded getEmbedded() {
+	public Tomcat getEmbedded() {
 		return embedded;
 	}
 

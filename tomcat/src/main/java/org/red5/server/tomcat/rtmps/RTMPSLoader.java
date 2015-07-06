@@ -21,11 +21,16 @@ package org.red5.server.tomcat.rtmps;
 
 import java.io.File;
 
+import javax.servlet.ServletException;
+
 import org.apache.catalina.Context;
 import org.apache.catalina.Engine;
+import org.apache.catalina.Service;
 import org.apache.catalina.Valve;
 import org.apache.catalina.connector.Connector;
+import org.apache.catalina.core.StandardEngine;
 import org.apache.catalina.core.StandardHost;
+import org.apache.catalina.core.StandardService;
 import org.apache.catalina.core.StandardWrapper;
 import org.apache.catalina.loader.WebappLoader;
 import org.red5.logging.Red5LoggerFactory;
@@ -61,15 +66,20 @@ public class RTMPSLoader extends RTMPTLoader {
 		this.server = server;
 	}
 
-	/** {@inheritDoc} */
-	@SuppressWarnings("deprecation")
+	/** {@inheritDoc} 
+	 * @throws ServletException */
 	@Override
-	public void start() {
+	public void start() throws ServletException {
 		log.info("Loading RTMPS context");
-		rtmpsEngine = embedded.createEngine();
-		rtmpsEngine.setDefaultHost(host.getName());
+		rtmpsEngine = new StandardEngine();
 		rtmpsEngine.setName("red5RTMPSEngine");
-		rtmpsEngine.setService(embedded);
+		rtmpsEngine.setDefaultHost(host.getName());
+		rtmpsEngine.setRealm(embedded.getEngine().getRealm());
+        
+		Service service = new StandardService();
+		service.setName("red5RTMPSEngine");
+		service.setContainer(rtmpsEngine);
+        
 		// add the valves to the host
 		for (Valve valve : valves) {
 			log.debug("Adding host valve: {}", valve);
@@ -79,7 +89,7 @@ public class RTMPSLoader extends RTMPTLoader {
 		// create and add root context
 		File appDirBase = new File(webappFolder);
 		String webappContextDir = FileUtil.formatPath(appDirBase.getAbsolutePath(), "/root");
-		Context ctx = embedded.createContext("/", webappContextDir);
+		Context ctx = embedded.addWebapp("/", webappContextDir);
 		//no reload for now
 		ctx.setReloadable(false);
 		log.debug("Context name: {}", ctx.getName());
@@ -112,14 +122,14 @@ public class RTMPSLoader extends RTMPTLoader {
 		// add the host
 		rtmpsEngine.addChild(host);
 		// add new Engine to set of Engine for embedded server
-		embedded.addEngine(rtmpsEngine);
+		embedded.getServer().addService(service);
 		try {
 			// loop through connectors and apply methods / props
 			for (TomcatConnector tomcatConnector : connectors) {
 				// get the connector
 				Connector connector = tomcatConnector.getConnector();
         		// add new Connector to set of Connectors for embedded server, associated with Engine
-       			embedded.addConnector(connector);
+				service.addConnector(connector);
        			log.trace("Connector oName: {}", connector.getObjectName());
 				log.info("Starting RTMPS engine");
 				// start connector

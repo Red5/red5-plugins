@@ -27,6 +27,7 @@ import javax.management.JMX;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 
 import org.apache.catalina.Container;
 import org.apache.catalina.Context;
@@ -83,10 +84,11 @@ public class TomcatVHostLoader extends TomcatLoader implements TomcatVHostLoader
 	
 	/**
 	 * Initialization.
+	 * @throws ServletException 
 	 */
 	@SuppressWarnings("cast")
 	@Override
-	public void start() {
+	public void start() throws ServletException {
 		log.info("Loading tomcat virtual host");
 		if (webappFolder != null) {
 			//check for match with base webapp root
@@ -256,9 +258,10 @@ public class TomcatVHostLoader extends TomcatLoader implements TomcatVHostLoader
 	 * version of init().
 	 * 
 	 * @return true on success
+	 * @throws ServletException 
 	 */
 	@SuppressWarnings("cast")
-	public boolean startWebApplication(String applicationName) {
+	public boolean startWebApplication(String applicationName) throws ServletException {
 		boolean result = false;
 		log.info("Starting Tomcat virtual host - Web application");	
 		log.info("Virtual host root: {}", webappRoot);
@@ -282,7 +285,7 @@ public class TomcatVHostLoader extends TomcatLoader implements TomcatVHostLoader
     		log.debug("Context initialized: {}", servletContext.getContextPath());
     		String prefix = servletContext.getRealPath("/");
     		log.debug("Path: {}", prefix);
-			Loader cldr = cont.getLoader();
+			Loader cldr = ((Context) cont).getLoader();
 			log.debug("Loader type: {}", cldr.getClass().getName());
 			ClassLoader webClassLoader = cldr.getClassLoader();
 			log.debug("Webapp classloader: {}", webClassLoader);
@@ -406,7 +409,7 @@ public class TomcatVHostLoader extends TomcatLoader implements TomcatVHostLoader
 	 */
 	public void addValve(Valve valve) {
 		log.debug("Adding valve: {}", valve);
-		log.debug("Valve info: {}", valve.getInfo());
+		log.debug("Valve info: {}", valve);
 		((StandardHost) host).addValve(valve);
 	}
 	
@@ -433,13 +436,13 @@ public class TomcatVHostLoader extends TomcatLoader implements TomcatVHostLoader
 	 * Set additional contexts.
 	 * 
 	 * @param contexts Map of contexts
+	 * @throws ServletException 
 	 */
-	@SuppressWarnings("deprecation")
 	@Override
-	public void setContexts(Map<String, String> contexts) {
+	public void setContexts(Map<String, String> contexts) throws ServletException {
 		log.debug("setContexts: {}", contexts.size());
 		for (Map.Entry<String, String> entry : contexts.entrySet()) {
-			host.addChild(embedded.createContext(entry.getKey(), webappRoot	+ entry.getValue()));
+			host.addChild(embedded.addWebapp(entry.getKey(), webappRoot	+ entry.getValue()));
 		}
 	}
 

@@ -5,7 +5,7 @@
 	<artifactId>tomcatplugin</artifactId>
 	<packaging>jar</packaging>
 	<name>tomcatplugin</name>
-	<version>1.7</version>
+	<version>1.8</version>
 	<url>https://github.com/Red5/red5-plugins/tree/master/tomcat</url>
 	<description>Tomcat web container plugin</description>
 	<parent>
@@ -15,8 +15,8 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<properties>
-		<tomcat.version>7.0.57</tomcat.version>
-		<ecj.version>4.4</ecj.version>
+		<tomcat.version>8.0.23</tomcat.version>
+		<ecj.version>4.4.2</ecj.version>
 	</properties>
 	<build>
 		<defaultGoal>install</defaultGoal>
@@ -24,12 +24,12 @@
 		<plugins>
 			<plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
+                <version>3.3</version>
                 <configuration>
-                    <compilerVersion>1.6</compilerVersion>
+                    <compilerVersion>1.7</compilerVersion>
                     <fork>true</fork>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <source>1.7</source>
+                    <target>1.7</target>
                     <executable>${maven.compiler.executable}</executable>
 				</configuration>
 			</plugin>
@@ -47,7 +47,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.10.1</version>
+                <version>2.10.3</version>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
@@ -84,14 +84,14 @@
             </plugin>
 			<plugin>
 				<artifactId>maven-jar-plugin</artifactId>
-				<version>2.4</version>
+				<version>2.6</version>
 				<configuration>
 					<useDefaultManifestFile>true</useDefaultManifestFile>
 				</configuration>
 			</plugin>
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.12</version>
+				<version>2.18.1</version>
 				<configuration>
 					<excludes>
 						<exclude>**/*WebTest.java</exclude>
@@ -100,19 +100,19 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-site-plugin</artifactId>
-				<version>3.0</version>
+				<version>3.4</version>
 				<configuration>
 					<reportPlugins>
 						<!-- Reporting on success / failure of unit tests -->
 						<plugin>
 							<artifactId>maven-surefire-report-plugin</artifactId>
-							<version>2.6</version>
+							<version>2.18.1</version>
 						</plugin>
 						<!-- Reporting on code coverage by unit tests. -->
 						<plugin>
 							<groupId>org.codehaus.mojo</groupId>
 							<artifactId>cobertura-maven-plugin</artifactId>
-							<version>2.5.1</version>
+							<version>2.7</version>
 							<configuration>
 								<formats>
 									<format>xml</format>
@@ -125,12 +125,12 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-project-info-reports-plugin</artifactId>
-				<version>2.4</version>
+				<version>2.8</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>maven-bundle-plugin</artifactId>
-				<version>2.3.7</version>
+				<version>2.5.4</version>
 				<extensions>true</extensions>
 			</plugin>
 		</plugins>
@@ -258,10 +258,6 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.sourceforge.groboutils</groupId>
-			<artifactId>groboutils-core</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.tomcat.embed</groupId>

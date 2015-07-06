@@ -21,7 +21,7 @@ package org.red5.server.tomcat;
 
 import org.apache.catalina.Context;
 import org.apache.catalina.Host;
-import org.apache.catalina.startup.Embedded;
+import org.apache.catalina.startup.Tomcat;
 import org.red5.logging.Red5LoggerFactory;
 import org.red5.server.LoaderBase;
 import org.red5.server.api.IApplicationLoader;
@@ -34,14 +34,13 @@ import org.springframework.context.ApplicationContext;
  * @author The Red5 Project (red5@osflash.org)
  * @author Joachim Bauch (jojo@struktur.de)
  */
-@SuppressWarnings("deprecation")
 public class TomcatApplicationLoader implements IApplicationLoader {
 
 	// Initialize Logging
 	protected static Logger log = Red5LoggerFactory.getLogger(TomcatApplicationLoader.class);	
 	
 	/** Store reference to embedded Tomcat engine. */
-	private Embedded embedded;
+	private Tomcat embedded;
 	
 	/** Store reference to host Tomcat is running on. */
 	private Host host;
@@ -55,7 +54,7 @@ public class TomcatApplicationLoader implements IApplicationLoader {
 	 * @param embedded
 	 * @param host
 	 */
-	protected TomcatApplicationLoader(Embedded embedded, Host host, ApplicationContext rootCtx) {
+	protected TomcatApplicationLoader(Tomcat embedded, Host host, ApplicationContext rootCtx) {
 		this.embedded = embedded;
 		this.host = host;
 		this.rootCtx = rootCtx;
@@ -74,7 +73,7 @@ public class TomcatApplicationLoader implements IApplicationLoader {
 			directory = directory.substring(5);
 		}
 		if (host.findChild(contextPath) == null) {
-			Context c = embedded.createContext(contextPath, directory);
+			Context c = embedded.addWebapp(contextPath, directory);
 			LoaderBase.setRed5ApplicationContext(contextPath, new TomcatApplicationContext(c));
 			host.addChild(c);
 			//add virtual hosts / aliases

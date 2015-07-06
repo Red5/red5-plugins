@@ -1,6 +1,7 @@
 package org.red5.server.jmx.mxbeans;
 
 import javax.management.MXBean;
+import javax.servlet.ServletException;
 
 import org.apache.catalina.Host;
 import org.apache.catalina.Valve;
@@ -33,7 +34,7 @@ import org.apache.catalina.Valve;
 @MXBean
 public interface TomcatVHostLoaderMXBean {
 
-	public boolean startWebApplication(String applicationName);	
+	public boolean startWebApplication(String applicationName) throws ServletException;
 	
 	public boolean getAutoDeploy();
 
@@ -49,7 +50,7 @@ public interface TomcatVHostLoaderMXBean {
 
 	public void removeAlias(String alias);
 	
-	public org.apache.catalina.Context addContext(String path, String docBase);
+	public org.apache.catalina.Context addContext(String path, String docBase) throws ServletException;
 
 	public void removeContext(String path);
 	
