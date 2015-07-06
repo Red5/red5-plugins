@@ -66,12 +66,12 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<red5-server.version>1.0.6-SNAPSHOT</red5-server.version>
-		<red5-client.version>1.0.5-RELEASE</red5-client.version>
+		<red5-client.version>1.0.6-SNAPSHOT</red5-client.version>
 		<spring.version>4.1.7.RELEASE</spring.version>
-		<mina.version>2.0.8</mina.version>
+		<mina.version>2.0.9</mina.version>
 		<slf4j.version>1.7.9</slf4j.version>
 		<logback.version>1.1.2</logback.version>
-		<bc.version>1.51</bc.version>
+		<bc.version>1.52</bc.version>
 		<junit.version>4.12</junit.version>
 	</properties>
 	<repositories>
