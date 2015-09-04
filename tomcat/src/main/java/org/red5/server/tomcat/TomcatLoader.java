@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.lang.management.ManagementFactory;
 import java.net.BindException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +53,10 @@ import org.apache.catalina.loader.WebappLoader;
 import org.apache.catalina.realm.JAASRealm;
 import org.apache.catalina.realm.NullRealm;
 import org.apache.catalina.realm.RealmBase;
+import org.apache.catalina.startup.Constants;
+import org.apache.catalina.startup.ContextConfig;
 import org.apache.catalina.startup.Tomcat;
+import org.apache.catalina.startup.Tomcat.DefaultWebXmlListener;
 import org.red5.logging.Red5LoggerFactory;
 import org.red5.server.ContextLoader;
 import org.red5.server.LoaderBase;
@@ -162,7 +167,7 @@ public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMX
 	/**
 	 * Add context for path and docbase to current host.
 	 * 
-	 * @param path Path
+	 * @param contextPath Path
 	 * @param docBase Document base
 	 * @return Catalina context (that is, web application)
 	 * @throws ServletException 
@@ -174,33 +179,34 @@ public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMX
 	/**
 	 * Add context for path and docbase to a host.
 	 * 
-	 * @param path Path
+	 * @param contextPath Path
 	 * @param docBase Document base
 	 * @param host Host to add context to
 	 * @return Catalina context (that is, web application)
 	 * @throws ServletException 
 	 */
-	public Context addContext(String path, String docBase, Host host) throws ServletException {
-		log.debug("Add context - path: {} docbase: {}", path, docBase);
-		org.apache.catalina.Context c = embedded.addWebapp(path, docBase);
-		if (c != null) {
-			log.trace("Context name: {} docbase: {} encoded: {}", new Object[] { c.getName(), c.getDocBase(), c.getEncodedPath() });
+	public Context addContext(String contextPath, String docBase, Host host) throws ServletException {
+		log.debug("Add context - path: {} docbase: {}", contextPath, docBase);
+		// instance a context
+        org.apache.catalina.Context ctx = embedded.addWebapp(host, contextPath, docBase);
+        if (ctx != null) {
+	        // grab the current classloader
 			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-			c.setParentClassLoader(classLoader);
-			//
-			Object ldr = c.getLoader();
+			ctx.setParentClassLoader(classLoader);
+			// get the associated loader for the context
+			Object ldr = ctx.getLoader();
 			log.trace("Context loader (null if the context has not been started): {}", ldr);
 			if (ldr == null) {
 				WebappLoader wldr = new WebappLoader(classLoader);
 				//add the Loader to the context
-				c.setLoader(wldr);
+				ctx.setLoader(wldr);
 			}
-			log.debug("Context loader (check): {} Context classloader: {}", c.getLoader(), c.getLoader().getClassLoader());
-			LoaderBase.setRed5ApplicationContext(getHostId() + path, new TomcatApplicationContext(c));
+			log.trace("Context loader (check): {} Context classloader: {}", ctx.getLoader(), ctx.getLoader().getClassLoader());
+			LoaderBase.setRed5ApplicationContext(getHostId() + contextPath, new TomcatApplicationContext(ctx));
 		} else {
 			log.trace("Context is null");
 		}
-		return c;
+		return ctx;
 	}
 
 	/**
@@ -255,7 +261,6 @@ public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMX
 		engine = embedded.getEngine();
 		engine.setName(serviceEngineName);
 		engine.setDefaultHost(host.getName());
-		engine.setName(serviceEngineName);
 
 		if (webappFolder == null) {
 			// Use default webapps directory
@@ -418,11 +423,10 @@ public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMX
 					}
 					final StandardContext ctx = (StandardContext) cont;
 					final ServletContext servletContext = ctx.getServletContext();
-					log.debug("Context initialized: {}", servletContext.getContextPath());
-					//set the hosts id
+					// set the hosts id
 					servletContext.setAttribute("red5.host.id", getHostId());
 					final String prefix = servletContext.getRealPath("/");
-					log.debug("Path: {}", prefix);
+					log.info("Context initialized: {} path: {}", servletContext.getContextPath(), prefix);
 					try {
 						ctx.resourcesStart();
 						log.debug("Context - privileged: {}, start time: {}, reloadable: {}",

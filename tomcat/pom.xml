@@ -5,7 +5,7 @@
 	<artifactId>tomcatplugin</artifactId>
 	<packaging>jar</packaging>
 	<name>tomcatplugin</name>
-	<version>1.8</version>
+	<version>1.9</version>
 	<url>https://github.com/Red5/red5-plugins/tree/master/tomcat</url>
 	<description>Tomcat web container plugin</description>
 	<parent>
@@ -68,7 +68,6 @@
                     <stylesheetfile>javadoc.css</stylesheetfile>
                     <links>
                         <link>http://download.oracle.com/javase/7/docs/api</link>
-                        <link>http://docs.spring.io/spring/docs/4.0.3.RELEASE/javadoc-api</link>
                         <link>http://www.slf4j.org/api</link>
                         <link>http://logging.apache.org/log4j/1.2/apidocs</link>
                     </links>
