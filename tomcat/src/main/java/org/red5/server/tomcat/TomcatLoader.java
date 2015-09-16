@@ -158,7 +158,7 @@ public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMX
 	 * Valves
 	 */
 	protected List<Valve> valves = new ArrayList<Valve>();
-
+	
 	/**
 	 * Add context for path and docbase to current host.
 	 * 
@@ -242,9 +242,8 @@ public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMX
 		String serverRoot = System.getProperty("red5.root");
 		log.info("Server root: {}", serverRoot);
 		String confRoot = System.getProperty("red5.config_root");
-		log.info("Config root: {}", confRoot);
-		// set catalina's home property
-		System.setProperty("CATALINA_HOME", serverRoot);
+		log.info("Config root: {}", confRoot);		
+		// check naming flag
 		Boolean useNaming = Boolean.valueOf(System.getProperty("catalina.useNaming"));
 		// create one embedded (server) and use it everywhere
 		embedded = new Tomcat();
@@ -263,7 +262,7 @@ public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMX
 		}
 		System.setProperty("red5.webapp.root", webappFolder);
 		log.info("Application root: {}", webappFolder);
-
+		
 		// scan for additional webapp contexts
 
 		// Root applications directory
