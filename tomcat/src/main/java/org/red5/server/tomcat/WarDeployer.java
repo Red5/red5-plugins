@@ -22,6 +22,10 @@ package org.red5.server.tomcat;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.lang.management.ManagementFactory;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.management.JMX;
@@ -29,8 +33,6 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import javax.servlet.ServletException;
 
-import org.red5.server.api.scheduling.IScheduledJob;
-import org.red5.server.api.scheduling.ISchedulingService;
 import org.red5.server.jmx.mxbeans.LoaderMXBean;
 import org.red5.server.util.FileUtil;
 import org.slf4j.Logger;
@@ -45,8 +47,13 @@ public final class WarDeployer {
 
 	private Logger log = LoggerFactory.getLogger(WarDeployer.class);
 
-	private ISchedulingService scheduler;
+	//that wars are currently being installed
+	private static AtomicBoolean deploying = new AtomicBoolean(false);
 
+	private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
+	private ScheduledFuture<DeployJob> future;
+	
 	/**
 	 * How often to check for new war files
 	 */
@@ -62,18 +69,14 @@ public final class WarDeployer {
 	 */
 	protected boolean expandWars;
 
-	private static String jobName;
-
-	//that wars are currently being installed
-	private static AtomicBoolean deploying = new AtomicBoolean(false);
-
 	{
 		log.info("War deployer service created");
 	}
 
-	public void init() {
+	@SuppressWarnings("unchecked")
+    public void init() {
 		// create the job and schedule it
-		jobName = scheduler.addScheduledJobAfterDelay(checkInterval, new DeployJob(), 60000);
+		future = (ScheduledFuture<DeployJob>) scheduler.scheduleAtFixedRate(new DeployJob(), 60000L, checkInterval, TimeUnit.MILLISECONDS);
 		// check the deploy from directory
 		log.debug("Webapps directory: {}", webappFolder);
 		File dir = new File(webappFolder);
@@ -166,7 +169,10 @@ public final class WarDeployer {
 	}
 
 	public void shutdown() {
-		scheduler.removeScheduledJob(jobName);
+		if (future != null) {
+			future.cancel(true);
+		}
+		scheduler.shutdownNow();
 	}
 
 	public void setCheckInterval(int checkInterval) {
@@ -175,14 +181,6 @@ public final class WarDeployer {
 
 	public int getCheckInterval() {
 		return checkInterval;
-	}
-
-	public ISchedulingService getScheduler() {
-		return scheduler;
-	}
-
-	public void setScheduler(ISchedulingService scheduler) {
-		this.scheduler = scheduler;
 	}
 
 	public String getWebappFolder() {
@@ -253,9 +251,9 @@ public final class WarDeployer {
 		}
 	}
 
-	private class DeployJob implements IScheduledJob {
+	private class DeployJob implements Runnable {
 
-		public void execute(ISchedulingService service) {
+		public void run() {
 			log.debug("Starting scheduled deployment of wars");
 			deploy(true);
 		}
