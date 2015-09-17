@@ -37,13 +37,15 @@ import org.red5.server.jmx.mxbeans.LoaderMXBean;
 import org.red5.server.util.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
 
 /**
  * This service provides the means to auto-deploy a war.
  * 
  * @author Paul Gregoire (mondain@gmail.com)
  */
-public final class WarDeployer {
+public final class WarDeployer implements InitializingBean, DisposableBean {
 
 	private Logger log = LoggerFactory.getLogger(WarDeployer.class);
 
@@ -67,14 +69,16 @@ public final class WarDeployer {
 	/**
 	 * Expand WAR files in the webapps directory prior to start up
 	 */
-	protected boolean expandWars;
+	private boolean expandWars;
 
 	{
 		log.info("War deployer service created");
 	}
 
 	@SuppressWarnings("unchecked")
-    public void init() {
+	@Override
+    public void afterPropertiesSet() throws Exception {
+		log.info("Starting WarDeployer");
 		// create the job and schedule it
 		future = (ScheduledFuture<DeployJob>) scheduler.scheduleAtFixedRate(new DeployJob(), 60000L, checkInterval, TimeUnit.MILLISECONDS);
 		// check the deploy from directory
@@ -84,7 +88,7 @@ public final class WarDeployer {
 			log.warn("Source directory not found");
 		} else {
 			if (!dir.isDirectory()) {
-				log.warn("Source directory is not a directory");
+				throw new Exception("Webapps directory is not a directory");
 			}
 		}
 		dir = null;
@@ -96,14 +100,12 @@ public final class WarDeployer {
 	}
 
 	private void deploy(boolean startApplication) {
+		log.info("Deploy wars {} app start", (startApplication ? "with" : "without"));
 		if (deploying.compareAndSet(false, true)) {
 			// short name
 			String application = null;
 			// file name
 			String applicationWarName = null;
-			// get webapp location
-			String webappsDir = System.getProperty("red5.webapp.root");
-			log.debug("Webapp folder: {}", webappsDir);
 			// look for web application archives
 			File dir = new File(webappFolder);
 			// get a list of wars
@@ -123,10 +125,10 @@ public final class WarDeployer {
 				log.debug("Application name: {}", application);
 				// setup context
 				String contextPath = '/' + application;
-				String contextDir = webappsDir + contextPath;
+				String contextDir = webappFolder + contextPath;
 				log.debug("Web context: {} context directory: {}", contextPath, contextDir);
 				// verify this is a unique app
-				File appDir = new File(webappsDir, application);
+				File appDir = new File(dir, application);
 				if (appDir.exists()) {
 					if (appDir.isDirectory()) {
 						log.debug("Application directory exists");
@@ -138,20 +140,20 @@ public final class WarDeployer {
 					log.debug("Unwaring and starting...");
 					// un-archive it to app dir
 					FileUtil.unzip(webappFolder + '/' + applicationWarName, contextDir);
-					// get the webapp loader
-					LoaderMXBean loader = getLoader();
-					if (loader != null) {
-						// load and start the context
-						try {
-							if (startApplication) {
-								loader.startWebApplication(application);
+					// load and start the context
+					if (startApplication) {
+						// get the webapp loader from jmx
+						LoaderMXBean loader = getLoader();
+						if (loader != null) {
+							try {
+							loader.startWebApplication(application);
+							} catch (ServletException e) {
+								log.error("Unexpected error while staring web application", e);
 							}
-						} catch (ServletException e) {
-							log.error("Unexpected error while staring web application", e);
 						}
 					}
 					// remove the war file
-					File warFile = new File(webappFolder, applicationWarName);
+					File warFile = new File(dir, applicationWarName);
 					if (warFile.delete()) {
 						log.debug("{} was deleted", warFile.getName());
 					} else {
@@ -168,13 +170,14 @@ public final class WarDeployer {
 		}
 	}
 
-	public void shutdown() {
+	@Override
+	public void destroy() throws Exception {
 		if (future != null) {
 			future.cancel(true);
 		}
 		scheduler.shutdownNow();
 	}
-
+	
 	public void setCheckInterval(int checkInterval) {
 		this.checkInterval = checkInterval;
 	}
@@ -208,15 +211,14 @@ public final class WarDeployer {
 	 */
 	@SuppressWarnings("cast")
 	public LoaderMXBean getLoader() {
+		LoaderMXBean loader = null;
 		MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-		// proxy class
-		LoaderMXBean proxy = null;
 		ObjectName oName;
 		try {
 			// TODO support all loaders
 			oName = new ObjectName("org.red5.server:type=TomcatLoader");
 			if (mbs.isRegistered(oName)) {
-				proxy = JMX.newMXBeanProxy(mbs, oName, LoaderMXBean.class, true);
+				loader = JMX.newMXBeanProxy(mbs, oName, LoaderMXBean.class, true);
 				log.debug("Loader was found");
 			} else {
 				log.warn("Loader not found");
@@ -224,7 +226,7 @@ public final class WarDeployer {
 		} catch (Exception e) {
 			log.error("Exception getting loader", e);
 		}
-		return proxy;
+		return loader;
 	}
 
 	/**

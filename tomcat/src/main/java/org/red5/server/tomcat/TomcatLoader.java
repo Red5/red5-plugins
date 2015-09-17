@@ -62,6 +62,7 @@ import org.red5.server.security.IRed5Realm;
 import org.red5.server.util.FileUtil;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.jmx.export.annotation.ManagedResource;
@@ -79,7 +80,7 @@ import org.w3c.dom.NodeList;
  * @author Paul Gregoire (mondain@gmail.com)
  */
 @ManagedResource(objectName = "org.red5.server:type=TomcatLoader", description = "TomcatLoader")
-public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMXBean {
+public class TomcatLoader extends LoaderBase implements InitializingBean, DisposableBean, LoaderMXBean {
 
 	/*
 	 * http://blog.springsource.com/2007/06/11/using-a-shared-parent-application-context-in-a-multi-war-spring-application/
@@ -158,6 +159,11 @@ public class TomcatLoader extends LoaderBase implements DisposableBean, LoaderMX
 	 * Valves
 	 */
 	protected List<Valve> valves = new ArrayList<Valve>();
+
+	@Override
+    public void afterPropertiesSet() throws Exception {
+		start();	    
+    }
 	
 	/**
 	 * Add context for path and docbase to current host.
