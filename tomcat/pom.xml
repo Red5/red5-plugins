@@ -5,7 +5,7 @@
 	<artifactId>tomcatplugin</artifactId>
 	<packaging>jar</packaging>
 	<name>tomcatplugin</name>
-	<version>1.10</version>
+	<version>1.11</version>
 	<url>https://github.com/Red5/red5-plugins/tree/master/tomcat</url>
 	<description>Tomcat web container plugin</description>
 	<parent>
@@ -15,7 +15,7 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<properties>
-		<tomcat.version>8.0.26</tomcat.version>
+		<tomcat.version>8.0.29</tomcat.version>
 		<ecj.version>4.4.2</ecj.version>
 	</properties>
 	<build>
