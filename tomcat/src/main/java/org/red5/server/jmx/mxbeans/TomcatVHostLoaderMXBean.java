@@ -34,48 +34,48 @@ import org.apache.catalina.Valve;
 @MXBean
 public interface TomcatVHostLoaderMXBean {
 
-	public boolean startWebApplication(String applicationName) throws ServletException;
-	
-	public boolean getAutoDeploy();
+    public boolean startWebApplication(String applicationName) throws ServletException;
 
-	public void setAutoDeploy(boolean autoDeploy);
+    public boolean getAutoDeploy();
+
+    public void setAutoDeploy(boolean autoDeploy);
 
     public Host getHost();
 
-	public String getDomain();
+    public String getDomain();
 
-	public void setDomain(String domain);
+    public void setDomain(String domain);
 
-	public void addAlias(String alias);
+    public void addAlias(String alias);
 
-	public void removeAlias(String alias);
-	
-	public org.apache.catalina.Context addContext(String path, String docBase) throws ServletException;
+    public void removeAlias(String alias);
 
-	public void removeContext(String path);
-	
-	public void addValve(Valve valve);
+    public org.apache.catalina.Context addContext(String path, String docBase) throws ServletException;
 
-	public void removeValve(String valveInfo);	
-	
-	public boolean getLiveDeploy();
+    public void removeContext(String path);
 
-	public void setLiveDeploy(boolean liveDeploy);
+    public void addValve(Valve valve);
 
-	public String getName();
+    public void removeValve(String valveInfo);
 
-	public void setName(String name);
+    public boolean getLiveDeploy();
 
-	public boolean getStartChildren();
+    public void setLiveDeploy(boolean liveDeploy);
 
-	public void setStartChildren(boolean startChildren);
+    public String getName();
 
-	public boolean getUnpackWARs();
+    public void setName(String name);
 
-	public void setUnpackWARs(boolean unpackWARs);
+    public boolean getStartChildren();
 
-	public String getWebappRoot();
+    public void setStartChildren(boolean startChildren);
 
-	public void setWebappRoot(String webappRoot);
+    public boolean getUnpackWARs();
+
+    public void setUnpackWARs(boolean unpackWARs);
+
+    public String getWebappRoot();
+
+    public void setWebappRoot(String webappRoot);
 
 }

@@ -50,130 +50,133 @@ import org.slf4j.Logger;
  */
 public class RTMPTLoader extends TomcatLoader {
 
-	// Initialize Logging
-	private Logger log = Red5LoggerFactory.getLogger(RTMPTLoader.class);
+    // Initialize Logging
+    private Logger log = Red5LoggerFactory.getLogger(RTMPTLoader.class);
 
-	/**
-	 * RTMPT Tomcat engine.
-	 */
-	protected Engine rtmptEngine;	
-	
-	/**
-	 * Server instance
-	 */
-	protected IServer server;
+    /**
+     * RTMPT Tomcat engine.
+     */
+    protected Engine rtmptEngine;
 
-	/**
-	 * Context, in terms of JEE context is web application in a servlet
-	 * container
-	 */
-	protected Context context;
+    /**
+     * Server instance
+     */
+    protected IServer server;
 
-	/**
-	 * Extra servlet mappings to add
-	 */
-	protected Map<String, String> servletMappings = new HashMap<String, String>();
-	
-	
-	/**
-	 * Setter for server
-	 * 
-	 * @param server Value to set for property 'server'.
-	 */
-	public void setServer(IServer server) {
-		log.debug("RTMPT setServer");
-		this.server = server;
-	}
+    /**
+     * Context, in terms of JEE context is web application in a servlet container
+     */
+    protected Context context;
 
-	/** {@inheritDoc} 
-	 * @throws ServletException */
-	@Override
-	public void start() throws ServletException {
-		log.info("Loading RTMPT context");
+    /**
+     * Extra servlet mappings to add
+     */
+    protected Map<String, String> servletMappings = new HashMap<String, String>();
 
-		rtmptEngine = new StandardEngine();
-		rtmptEngine.setName("red5RTMPTEngine");
-		rtmptEngine.setDefaultHost(host.getName());
-		rtmptEngine.setRealm(embedded.getEngine().getRealm());
-        
-		Service service = new StandardService();
-		service.setName("red5RTMPTEngine");
-		service.setContainer(rtmptEngine);
+    /**
+     * Setter for server
+     * 
+     * @param server
+     *            Value to set for property 'server'.
+     */
+    public void setServer(IServer server) {
+        log.debug("RTMPT setServer");
+        this.server = server;
+    }
 
-		// add the valves to the host
-		for (Valve valve : valves) {
-			log.debug("Adding host valve: {}", valve);
-			((StandardHost) host).addValve(valve);
-		}				
-		
-		// create and add root context
-		File appDirBase = new File(webappFolder);
-		String webappContextDir = FileUtil.formatPath(appDirBase.getAbsolutePath(), "/root");
-		Context ctx = embedded.addWebapp("/", webappContextDir);
-		//no reload for now
-		ctx.setReloadable(false);
-		log.debug("Context name: {}", ctx.getName());
-		Object ldr = ctx.getLoader();
-		log.trace("Context loader (null if the context has not been started): {}", ldr);
-		if (ldr == null) {
-			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-			ctx.setParentClassLoader(classLoader);
-			WebappLoader wldr = new WebappLoader(classLoader);
-			//add the Loader to the context
-			ctx.setLoader(wldr);
-		}  		
-		appDirBase = null;
-		webappContextDir = null;
-		
-		host.addChild(ctx);
-		
-		// add servlet wrapper
-		StandardWrapper wrapper = (StandardWrapper) ctx.createWrapper();
-		wrapper.setServletName("RTMPTServlet");
-		wrapper.setServletClass("org.red5.server.net.rtmpt.RTMPTServlet");
-		ctx.addChild(wrapper);
-		
-		// add servlet mappings
-		ctx.addServletMapping("/open/*", "RTMPTServlet");
-		ctx.addServletMapping("/close/*", "RTMPTServlet");
-		ctx.addServletMapping("/send/*", "RTMPTServlet");
-		ctx.addServletMapping("/idle/*", "RTMPTServlet");	
-		
-		// add any additional mappings
-		for (String key : servletMappings.keySet()) {
-			context.addServletMapping(servletMappings.get(key), key);
-		}				
-		rtmptEngine.addChild(host);
-		// add new Engine to set of Engine for embedded server
-		embedded.getServer().addService(service);
-		try {
-			// loop through connectors and apply methods / props
-			for (TomcatConnector tomcatConnector : connectors) {
-				// get the connector
-				Connector connector = tomcatConnector.getConnector();
-        		// add new Connector to set of Connectors for embedded server, associated with Engine
-				service.addConnector(connector);
-       			log.trace("Connector oName: {}", connector.getObjectName());
-				log.info("Starting RTMPT engine");
-				// start connector
-				connector.start();
-			}
-		} catch (Exception e) {
-			log.error("Error initializing RTMPT server instance", e);
-		} finally {
-			registerJMX();		
-		}
+    /**
+     * {@inheritDoc}
+     * 
+     * @throws ServletException
+     */
+    @Override
+    public void start() throws ServletException {
+        log.info("Loading RTMPT context");
 
-	}
-	
-	/**
-	 * Set servlet mappings
-	 * 
-	 * @param mappings mappings
-	 */
-	public void setMappings(Map<String, String> mappings) {
-		log.debug("Servlet mappings: {}", mappings.size());
-		servletMappings.putAll(mappings);
-	}
-	
+        rtmptEngine = new StandardEngine();
+        rtmptEngine.setName("red5RTMPTEngine");
+        rtmptEngine.setDefaultHost(host.getName());
+        rtmptEngine.setRealm(embedded.getEngine().getRealm());
+
+        Service service = new StandardService();
+        service.setName("red5RTMPTEngine");
+        service.setContainer(rtmptEngine);
+
+        // add the valves to the host
+        for (Valve valve : valves) {
+            log.debug("Adding host valve: {}", valve);
+            ((StandardHost) host).addValve(valve);
+        }
+
+        // create and add root context
+        File appDirBase = new File(webappFolder);
+        String webappContextDir = FileUtil.formatPath(appDirBase.getAbsolutePath(), "/root");
+        Context ctx = embedded.addWebapp("/", webappContextDir);
+        //no reload for now
+        ctx.setReloadable(false);
+        log.debug("Context name: {}", ctx.getName());
+        Object ldr = ctx.getLoader();
+        log.trace("Context loader (null if the context has not been started): {}", ldr);
+        if (ldr == null) {
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            ctx.setParentClassLoader(classLoader);
+            WebappLoader wldr = new WebappLoader(classLoader);
+            //add the Loader to the context
+            ctx.setLoader(wldr);
+        }
+        appDirBase = null;
+        webappContextDir = null;
+
+        host.addChild(ctx);
+
+        // add servlet wrapper
+        StandardWrapper wrapper = (StandardWrapper) ctx.createWrapper();
+        wrapper.setServletName("RTMPTServlet");
+        wrapper.setServletClass("org.red5.server.net.rtmpt.RTMPTServlet");
+        ctx.addChild(wrapper);
+
+        // add servlet mappings
+        ctx.addServletMapping("/open/*", "RTMPTServlet");
+        ctx.addServletMapping("/close/*", "RTMPTServlet");
+        ctx.addServletMapping("/send/*", "RTMPTServlet");
+        ctx.addServletMapping("/idle/*", "RTMPTServlet");
+
+        // add any additional mappings
+        for (String key : servletMappings.keySet()) {
+            context.addServletMapping(servletMappings.get(key), key);
+        }
+        rtmptEngine.addChild(host);
+        // add new Engine to set of Engine for embedded server
+        embedded.getServer().addService(service);
+        try {
+            // loop through connectors and apply methods / props
+            for (TomcatConnector tomcatConnector : connectors) {
+                // get the connector
+                Connector connector = tomcatConnector.getConnector();
+                // add new Connector to set of Connectors for embedded server, associated with Engine
+                service.addConnector(connector);
+                log.trace("Connector oName: {}", connector.getObjectName());
+                log.info("Starting RTMPT engine");
+                // start connector
+                connector.start();
+            }
+        } catch (Exception e) {
+            log.error("Error initializing RTMPT server instance", e);
+        } finally {
+            registerJMX();
+        }
+
+    }
+
+    /**
+     * Set servlet mappings
+     * 
+     * @param mappings
+     *            mappings
+     */
+    public void setMappings(Map<String, String> mappings) {
+        log.debug("Servlet mappings: {}", mappings.size());
+        servletMappings.putAll(mappings);
+    }
+
 }

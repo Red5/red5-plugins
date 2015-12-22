@@ -23,90 +23,90 @@ import java.io.Serializable;
 import java.security.Principal;
 
 /**
- * Represents a user.
- * <br />
- * Principals may be associated with a particular <code>Subject</code>
- * to augment it with an additional identity. Authorization decisions can be based upon 
- * the Principals associated with a <code>Subject</code>.
+ * Represents a user. <br />
+ * Principals may be associated with a particular <code>Subject</code> to augment it with an additional identity. Authorization decisions can be based upon the Principals associated with a <code>Subject</code>.
  * 
  * @see java.security.Principal
  * @see javax.security.auth.Subject
  */
 public class SimplePrincipal implements Principal, Serializable {
 
-	private static final long serialVersionUID = -5845179654012035528L;
+    private static final long serialVersionUID = -5845179654012035528L;
 
-	/**
-	 * @serial
-	 */
-	private String name;
-	
-	private String passwd;
+    /**
+     * @serial
+     */
+    private String name;
 
-	/**
-	 * Create a Principal with the given name.
-	 * 
-	 * @param name the username for this user
-	 * @param password the password for this user
-	 * @exception NullPointerException if the name is null.
-	 */
-	public SimplePrincipal(String name, String password) {
-		if (name == null) {
-			throw new NullPointerException("Name cannot be null");
-		}
-		this.name = name;
-		this.passwd = password;
-	}
+    private String passwd;
 
-	/** {@inheritDoc} */
-	public String getName() {
-		return name;
-	}
+    /**
+     * Create a Principal with the given name.
+     * 
+     * @param name
+     *            the username for this user
+     * @param password
+     *            the password for this user
+     * @exception NullPointerException
+     *                if the name is null.
+     */
+    public SimplePrincipal(String name, String password) {
+        if (name == null) {
+            throw new NullPointerException("Name cannot be null");
+        }
+        this.name = name;
+        this.passwd = password;
+    }
 
-	/**
-	 * @return the passwd
-	 */
-	public String getPassword() {
-		return passwd;
-	}
+    /** {@inheritDoc} */
+    public String getName() {
+        return name;
+    }
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		return result;
-	}
+    /**
+     * @return the passwd
+     */
+    public String getPassword() {
+        return passwd;
+    }
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		SimplePrincipal other = (SimplePrincipal) obj;
-		if (name == null) {
-			if (other.name != null)
-				return false;
-		} else if (!name.equals(other.name))
-			return false;
-		return true;
-	}
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        return result;
+    }
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "SimplePrincipal [name=" + name + ", password=" + passwd + "]";
-	}
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        SimplePrincipal other = (SimplePrincipal) obj;
+        if (name == null) {
+            if (other.name != null)
+                return false;
+        } else if (!name.equals(other.name))
+            return false;
+        return true;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "SimplePrincipal [name=" + name + ", password=" + passwd + "]";
+    }
 
 }

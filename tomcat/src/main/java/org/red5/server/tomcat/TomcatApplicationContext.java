@@ -39,68 +39,68 @@ import org.springframework.web.context.WebApplicationContext;
  */
 public class TomcatApplicationContext implements IApplicationContext {
 
-	protected static Logger log = Red5LoggerFactory.getLogger(TomcatApplicationContext.class);
+    protected static Logger log = Red5LoggerFactory.getLogger(TomcatApplicationContext.class);
 
-	/** Store a reference to the Tomcat webapp context. */
-	private Context context;
-	
-	/**
-	 * Wrap the passed Tomcat webapp context.
-	 * 
-	 * @param context
-	 */
-	protected TomcatApplicationContext(Context context) {
-		log.debug("new context: {}", context);
-		this.context = context;
-	}
-	
-	/**
-	 * Stop the application and servlet contexts.
-	 */
-	public void stop() {
-		log.debug("stop");
-		try {
-			ServletContext servlet = context.getServletContext();
-			Object o = servlet.getAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
-			if (o != null) {
-				log.debug("Spring context for {} was found", context.getName());
-				ConfigurableWebApplicationContext appCtx = (ConfigurableWebApplicationContext) o;
-				// close the red5 app
-				if (appCtx.isRunning()) {
-					log.debug("Context was running, attempting to stop");
-					appCtx.stop();
-				}
-				if (appCtx.isActive()) {
-					log.debug("Context is active, attempting to close");
-					appCtx.close();
-				}
-			} else {
-				log.warn("Spring context for {} was not found", context.getName());
-			}
-		} catch (Exception e) {
-			log.error("Could not stop spring context", e);
-		}			
-		context.getParent().removeChild(context);
-		if (context instanceof StandardContext) {
-			StandardContext ctx = (StandardContext) context;
-			LifecycleState state = ctx.getState();
-			if (state != LifecycleState.DESTROYED && state != LifecycleState.DESTROYING) {
-    			try {
-    				if (state != LifecycleState.STOPPED && state != LifecycleState.STOPPING) {
-        				// stop the tomcat context
-        				ctx.stop();
-    				}
-    			} catch (Exception e) {
-    				log.error("Could not stop context", e);
-    			} finally {
-            		try {
-            			ctx.destroy();
-            		} catch (Exception e) {
-            			log.error("Could not destroy context", e);
-            		}
-    			}
-			}
-		}
-	}
+    /** Store a reference to the Tomcat webapp context. */
+    private Context context;
+
+    /**
+     * Wrap the passed Tomcat webapp context.
+     * 
+     * @param context
+     */
+    protected TomcatApplicationContext(Context context) {
+        log.debug("new context: {}", context);
+        this.context = context;
+    }
+
+    /**
+     * Stop the application and servlet contexts.
+     */
+    public void stop() {
+        log.debug("stop");
+        try {
+            ServletContext servlet = context.getServletContext();
+            Object o = servlet.getAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
+            if (o != null) {
+                log.debug("Spring context for {} was found", context.getName());
+                ConfigurableWebApplicationContext appCtx = (ConfigurableWebApplicationContext) o;
+                // close the red5 app
+                if (appCtx.isRunning()) {
+                    log.debug("Context was running, attempting to stop");
+                    appCtx.stop();
+                }
+                if (appCtx.isActive()) {
+                    log.debug("Context is active, attempting to close");
+                    appCtx.close();
+                }
+            } else {
+                log.warn("Spring context for {} was not found", context.getName());
+            }
+        } catch (Exception e) {
+            log.error("Could not stop spring context", e);
+        }
+        context.getParent().removeChild(context);
+        if (context instanceof StandardContext) {
+            StandardContext ctx = (StandardContext) context;
+            LifecycleState state = ctx.getState();
+            if (state != LifecycleState.DESTROYED && state != LifecycleState.DESTROYING) {
+                try {
+                    if (state != LifecycleState.STOPPED && state != LifecycleState.STOPPING) {
+                        // stop the tomcat context
+                        ctx.stop();
+                    }
+                } catch (Exception e) {
+                    log.error("Could not stop context", e);
+                } finally {
+                    try {
+                        ctx.destroy();
+                    } catch (Exception e) {
+                        log.error("Could not destroy context", e);
+                    }
+                }
+            }
+        }
+    }
 
 }

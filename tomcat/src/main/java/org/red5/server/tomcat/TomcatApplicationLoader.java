@@ -36,63 +36,63 @@ import org.springframework.context.ApplicationContext;
  */
 public class TomcatApplicationLoader implements IApplicationLoader {
 
-	// Initialize Logging
-	protected static Logger log = Red5LoggerFactory.getLogger(TomcatApplicationLoader.class);	
-	
-	/** Store reference to embedded Tomcat engine. */
-	private Tomcat embedded;
-	
-	/** Store reference to host Tomcat is running on. */
-	private Host host;
-	
-	/** Stores reference to the root ApplicationContext. */
-	private ApplicationContext rootCtx;
-	
-	/**
-	 * Wrap Tomcat engine and host.
-	 * 
-	 * @param embedded
-	 * @param host
-	 */
-	protected TomcatApplicationLoader(Tomcat embedded, Host host, ApplicationContext rootCtx) {
-		this.embedded = embedded;
-		this.host = host;
-		this.rootCtx = rootCtx;
-	}
+    // Initialize Logging
+    protected static Logger log = Red5LoggerFactory.getLogger(TomcatApplicationLoader.class);
 
-	/** {@inheritDoc} */
-	public ApplicationContext getRootContext() {
-		log.debug("getRootContext");
-		return rootCtx;
-	}
+    /** Store reference to embedded Tomcat engine. */
+    private Tomcat embedded;
 
-	/** {@inheritDoc} */
-	public void loadApplication(String contextPath, String virtualHosts, String directory) throws Exception {
-		log.debug("Load application - context path: {} directory: {} virtual hosts: {}", new Object[]{contextPath, directory, virtualHosts});
-		if (directory.startsWith("file:")) {
-			directory = directory.substring(5);
-		}
-		if (host.findChild(contextPath) == null) {
-			Context c = embedded.addWebapp(contextPath, directory);
-			LoaderBase.setRed5ApplicationContext(contextPath, new TomcatApplicationContext(c));
-			host.addChild(c);
-			//add virtual hosts / aliases
-			String[] vhosts = virtualHosts.split(",");
-			for (String s : vhosts) {
-				if (!"*".equals(s)) {
-					//if theres a port, strip it
-					if (s.indexOf(':') == -1) {
-						host.addAlias(s);						
-					} else {
-						host.addAlias(s.split(":")[0]);
-					}
-				} else {
-					log.warn("\"*\" based virtual hosts not supported");
-				}
-			}
-		} else {
-			log.warn("Context path already exists with host");
-		}
-	}
+    /** Store reference to host Tomcat is running on. */
+    private Host host;
+
+    /** Stores reference to the root ApplicationContext. */
+    private ApplicationContext rootCtx;
+
+    /**
+     * Wrap Tomcat engine and host.
+     * 
+     * @param embedded
+     * @param host
+     */
+    protected TomcatApplicationLoader(Tomcat embedded, Host host, ApplicationContext rootCtx) {
+        this.embedded = embedded;
+        this.host = host;
+        this.rootCtx = rootCtx;
+    }
+
+    /** {@inheritDoc} */
+    public ApplicationContext getRootContext() {
+        log.debug("getRootContext");
+        return rootCtx;
+    }
+
+    /** {@inheritDoc} */
+    public void loadApplication(String contextPath, String virtualHosts, String directory) throws Exception {
+        log.debug("Load application - context path: {} directory: {} virtual hosts: {}", new Object[] { contextPath, directory, virtualHosts });
+        if (directory.startsWith("file:")) {
+            directory = directory.substring(5);
+        }
+        if (host.findChild(contextPath) == null) {
+            Context c = embedded.addWebapp(contextPath, directory);
+            LoaderBase.setRed5ApplicationContext(contextPath, new TomcatApplicationContext(c));
+            host.addChild(c);
+            //add virtual hosts / aliases
+            String[] vhosts = virtualHosts.split(",");
+            for (String s : vhosts) {
+                if (!"*".equals(s)) {
+                    //if theres a port, strip it
+                    if (s.indexOf(':') == -1) {
+                        host.addAlias(s);
+                    } else {
+                        host.addAlias(s.split(":")[0]);
+                    }
+                } else {
+                    log.warn("\"*\" based virtual hosts not supported");
+                }
+            }
+        } else {
+            log.warn("Context path already exists with host");
+        }
+    }
 
 }
