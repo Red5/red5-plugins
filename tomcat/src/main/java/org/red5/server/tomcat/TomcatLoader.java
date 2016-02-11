@@ -1,23 +1,22 @@
-package org.red5.server.tomcat;
-
 /*
- * RED5 Open Source Flash Server - http://www.osflash.org/red5
- *
- * Copyright (c) 2006-2011 by respective authors (see below). All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under the
- * terms of the GNU Lesser General Public License as published by the Free Software
- * Foundation; either version 2.1 of the License, or (at your option) any later
- * version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
- * PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License along
- * with this library; if not, write to the Free Software Foundation, Inc.,
- * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * RED5 Open Source Flash Server - https://github.com/Red5/
+ * 
+ * Copyright 2006-2016 by respective authors (see below). All rights reserved.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
+package org.red5.server.tomcat;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -54,7 +53,6 @@ import org.apache.catalina.loader.WebappLoader;
 import org.apache.catalina.realm.JAASRealm;
 import org.apache.catalina.realm.NullRealm;
 import org.apache.catalina.realm.RealmBase;
-import org.apache.catalina.startup.Tomcat;
 import org.red5.logging.Red5LoggerFactory;
 import org.red5.server.ContextLoader;
 import org.red5.server.LoaderBase;
@@ -79,6 +77,8 @@ import org.w3c.dom.NodeList;
 
 /**
  * Red5 loader for Tomcat.
+ * 
+ * http://tomcat.apache.org/tomcat-8.0-doc/api/index.html
  * 
  * @author Paul Gregoire (mondain@gmail.com)
  */
@@ -139,7 +139,7 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
     /**
      * Embedded Tomcat service (like Catalina).
      */
-    protected static Tomcat embedded;
+    protected static EmbeddedTomcat embedded;
 
     /**
      * Tomcat engine.
@@ -264,11 +264,16 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
         // check naming flag
         Boolean useNaming = Boolean.valueOf(System.getProperty("catalina.useNaming"));
         // create one embedded (server) and use it everywhere
-        embedded = new Tomcat();
+        embedded = new EmbeddedTomcat();
         File serverRootF = new File(serverRoot);
         embedded.getServer().setCatalinaBase(serverRootF);
         embedded.getServer().setCatalinaHome(serverRootF);
         embedded.setHost(host);
+        // provide default configuration for a context. This is the programmatic equivalent of the default web.xml
+        // default-web.xml
+        //embedded.initWebappDefaults(confRoot);
+        // controls if the loggers will be silenced or not
+        embedded.setSilent(false);
 
         engine = embedded.getEngine();
         engine.setName(serviceEngineName);
@@ -687,7 +692,7 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
      *            Base host
      */
     public void setBaseHost(Host baseHost) {
-        log.debug("setBaseHost");
+        log.debug("setBaseHost: {}", baseHost);
         this.host = baseHost;
     }
 
@@ -739,7 +744,7 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
      * @param embedded
      *            Embedded object
      */
-    public void setEmbedded(Tomcat embedded) {
+    public void setEmbedded(EmbeddedTomcat embedded) {
         log.info("Setting embedded: {}", embedded.getClass().getName());
         TomcatLoader.embedded = embedded;
     }
@@ -749,7 +754,7 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
      * 
      * @return Embedded object
      */
-    public Tomcat getEmbedded() {
+    public EmbeddedTomcat getEmbedded() {
         return embedded;
     }
 
