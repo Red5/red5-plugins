@@ -4,7 +4,7 @@
     <artifactId>tomcatplugin</artifactId>
     <packaging>jar</packaging>
     <name>tomcatplugin</name>
-    <version>1.12</version>
+    <version>1.13</version>
     <url>https://github.com/Red5/red5-plugins/tree/master/tomcat</url>
     <description>Tomcat web container plugin</description>
     <parent>
@@ -14,7 +14,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
     <properties>
-        <tomcat.version>8.0.32</tomcat.version>
+        <tomcat.version>8.0.33</tomcat.version>
         <ecj.version>4.4.2</ecj.version>
     </properties>
     <build>
@@ -110,7 +110,6 @@
         <dependency>
             <groupId>org.red5</groupId>
             <artifactId>red5-server</artifactId>
-            <version>1.0.7-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -196,6 +195,11 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+            <version>${spring.version}</version>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>

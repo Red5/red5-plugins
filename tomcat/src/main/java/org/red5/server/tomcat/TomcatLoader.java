@@ -274,11 +274,13 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
         //embedded.initWebappDefaults(confRoot);
         // controls if the loggers will be silenced or not
         embedded.setSilent(false);
-
+        // get the engine
         engine = embedded.getEngine();
+        // give the engine a name
         engine.setName(serviceEngineName);
+        // set the default host for our engine
         engine.setDefaultHost(host.getName());
-
+        // set the webapp folder if not already specified
         if (webappFolder == null) {
             // Use default webapps directory
             webappFolder = FileUtil.formatPath(System.getProperty("red5.root"), "/webapps");

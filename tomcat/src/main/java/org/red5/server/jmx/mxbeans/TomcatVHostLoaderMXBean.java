@@ -24,7 +24,6 @@ import javax.servlet.ServletException;
 import org.apache.catalina.Host;
 import org.apache.catalina.Valve;
 
-
 /**
  * Simple mbean interface for Tomcat container virtual host loaders.
  *
