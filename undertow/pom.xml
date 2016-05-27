@@ -8,12 +8,12 @@
 	<version>1.1</version>
 	<url>https://github.com/Red5/red5-plugins/tree/master/undertow</url>
 	<description>Undertow web container plugin.</description>
-	<parent>
-		<groupId>org.red5</groupId>
-		<artifactId>plugins</artifactId>
-		<version>1.0</version>
-		<relativePath>../pom.xml</relativePath>
-	</parent>
+    <parent>
+        <groupId>org.red5</groupId>
+        <artifactId>plugins</artifactId>
+        <version>1.0.8-M1</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
 	<properties>
 		<undertow.version>1.0.0.Beta29</undertow.version>
 		<undertow-servlet.version>1.0.0.Beta29</undertow-servlet.version>
