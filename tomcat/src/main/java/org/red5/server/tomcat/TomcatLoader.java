@@ -468,6 +468,7 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
                             public void run() {
                                 //set thread context classloader to web classloader
                                 Thread.currentThread().setContextClassLoader(webClassLoader);
+                                Thread.currentThread().setName("Loader:" + servletContext.getContextPath());
                                 //get the web app's parent context
                                 ApplicationContext parentContext = null;
                                 if (applicationContext.containsBean(parentContextKey)) {
