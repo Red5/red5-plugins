@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.red5</groupId>
         <artifactId>red5-parent</artifactId>
-        <version>1.0.8-M1</version>
+        <version>1.0.8-M2</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>plugins</artifactId>
@@ -18,6 +18,7 @@
     <modules>
         <module>tomcat</module>
         <module>mqtt</module>
+        <module>securityplugin</module>
         <!-- 
         <module>undertow</module>
         <module>winstone</module>
@@ -108,6 +109,11 @@
                 <version>${project.parent.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.red5</groupId>
+                <artifactId>red5-io</artifactId>
+                <version>${project.parent.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcprov-jdk15on</artifactId>
                 <version>${bc.version}</version>
@@ -129,6 +135,12 @@
                 <artifactId>mina-parent</artifactId>
                 <version>${mina.version}</version>
                 <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.mina</groupId>
+                <artifactId>mina-core</artifactId>
+                <version>${mina.version}</version>
+                <type>bundle</type>
             </dependency>
             <dependency>
                 <groupId>org.springframework</groupId>
@@ -307,12 +319,6 @@
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
                 <version>${junit.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>net.sourceforge.groboutils</groupId>
-                <artifactId>groboutils-core</artifactId>
-                <version>5</version>
                 <scope>test</scope>
             </dependency>
             <dependency>

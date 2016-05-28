@@ -10,7 +10,7 @@
     <parent>
         <groupId>org.red5</groupId>
         <artifactId>plugins</artifactId>
-        <version>1.0.8-M1</version>
+        <version>1.0.8-M2</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <properties>
@@ -99,7 +99,6 @@
         <dependency>
             <groupId>org.red5</groupId>
             <artifactId>red5-server</artifactId>
-            <version>1.0.7-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
