@@ -1,65 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<artifactId>securityplugin</artifactId>
-	<packaging>jar</packaging>
-	<name>securityplugin</name>
-	<description>The Red5 SecurityPlugin</description>
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>securityplugin</artifactId>
+    <packaging>jar</packaging>
+    <name>securityplugin</name>
+    <description>The Red5 SecurityPlugin</description>
     <parent>
         <groupId>org.red5</groupId>
         <artifactId>plugins</artifactId>
-        <version>1.0.8-M2</version>
+        <version>1.0.8-M3</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-	<url>https://code.google.com/p/red5/</url>
-	<organization>
-		<name>Red5</name>
-		<url>https://code.google.com/p/red5</url>
-	</organization>
-	<licenses>
-		<license>
-			<name>Apache 2</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-			<distribution>repo</distribution>
-			<comments>A business-friendly OSS license</comments>
-		</license>
-	</licenses>
-	<mailingLists>
-		<mailingList>
-			<name>red5-interest</name>
-			<post>https://groups.google.com/forum/?fromgroups#!forum/red5interest</post>
-		</mailingList>
-	</mailingLists>
-	<issueManagement>
-		<system>google-code</system>
-		<url>https://code.google.com/p/red5/issues/list</url>
-	</issueManagement>
-	<developers>
-		<developer>
-			<id>Dominick Accattato</id>
-			<email>dominick@red5.org</email>
-		</developer>
-		<developer>
-			<id>Paul Gregoire</id>
-			<email>mondain@gmail.com</email>
-		</developer>
-		<developer>
-			<id>Dan Rossi</id>
-			<email>electroteque@gmail.com</email>
-		</developer>
-		<developer>
-			<id>Tiago Jacobs</id>
-			<email>tiago.jacobs@gmail.com</email>
-		</developer>
-	</developers>
-	<scm>
-		<url>https://github.com/mondain/red5-io</url>
-		<connection>scm:git:git://github.com/mondain/red5-io.git</connection>
-		<developerConnection>scm:git:git@github.com:mondain/red5-io.git</developerConnection>		
-	</scm>
-	<build>
-		<defaultGoal>install</defaultGoal>
+    <url>https://code.google.com/p/red5/</url>
+    <organization>
+        <name>Red5</name>
+        <url>https://code.google.com/p/red5</url>
+    </organization>
+    <licenses>
+        <license>
+            <name>Apache 2</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+            <comments>A business-friendly OSS license</comments>
+        </license>
+    </licenses>
+    <mailingLists>
+        <mailingList>
+            <name>red5-interest</name>
+            <post>https://groups.google.com/forum/?fromgroups#!forum/red5interest</post>
+        </mailingList>
+    </mailingLists>
+    <issueManagement>
+        <system>google-code</system>
+        <url>https://code.google.com/p/red5/issues/list</url>
+    </issueManagement>
+    <developers>
+        <developer>
+            <id>Dominick Accattato</id>
+            <email>dominick@red5.org</email>
+        </developer>
+        <developer>
+            <id>Paul Gregoire</id>
+            <email>mondain@gmail.com</email>
+        </developer>
+        <developer>
+            <id>Dan Rossi</id>
+            <email>electroteque@gmail.com</email>
+        </developer>
+        <developer>
+            <id>Tiago Jacobs</id>
+            <email>tiago.jacobs@gmail.com</email>
+        </developer>
+    </developers>
+    <scm>
+        <url>https://github.com/mondain/red5-io</url>
+        <connection>scm:git:git://github.com/mondain/red5-io.git</connection>
+        <developerConnection>scm:git:git@github.com:mondain/red5-io.git</developerConnection>       
+    </scm>
+    <build>
+        <defaultGoal>install</defaultGoal>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -117,71 +117,70 @@
                     </tags>
                 </configuration>
             </plugin>
-			<plugin>
-				<artifactId>maven-jar-plugin</artifactId>
-				<version>2.4</version>		
-				<configuration>
-					<archive>
-						<manifestEntries>
-			              <Red5-Plugin-Main-Class>org.red5.server.plugin.security.SecurityPlugin</Red5-Plugin-Main-Class>
-			            </manifestEntries>
-					</archive>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.felix</groupId>
-				<artifactId>maven-bundle-plugin</artifactId>
-				<version>2.3.7</version>
-				<extensions>true</extensions>
-			</plugin>
-		</plugins>
-		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-			</resource>
-			<resource>
-				<directory>src/main/java</directory>
-				<includes>
-					<include>**/*.xml</include>
-				</includes>
-			</resource>
-		</resources>
-		<testResources>
-			<testResource>
-				<directory>src/test/resources</directory>
-			</testResource>
-		</testResources>
-	</build>
-	<dependencies>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-context</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.mina</groupId>
-			<artifactId>mina-core</artifactId>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                          <Red5-Plugin-Main-Class>org.red5.server.plugin.security.SecurityPlugin</Red5-Plugin-Main-Class>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>2.3.7</version>
+                <extensions>true</extensions>
+            </plugin>
+        </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <resource>
+                <directory>src/main/java</directory>
+                <includes>
+                    <include>**/*.xml</include>
+                </includes>
+            </resource>
+        </resources>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+            </testResource>
+        </testResources>
+    </build>
+    <dependencies>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.mina</groupId>
+            <artifactId>mina-core</artifactId>
             <type>bundle</type>
-		</dependency>
-		<dependency>
-			<groupId>org.bouncycastle</groupId>
-			<artifactId>bcprov-jdk15on</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>commons-codec</groupId>
-			<artifactId>commons-codec</artifactId>
-			<version>1.6</version>
-		</dependency>
-		<dependency>
-			<groupId>org.red5</groupId>
-			<artifactId>red5-io</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.red5</groupId>
-			<artifactId>red5-server</artifactId>
-		</dependency>
-	</dependencies>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.red5</groupId>
+            <artifactId>red5-io</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.red5</groupId>
+            <artifactId>red5-server</artifactId>
+        </dependency>
+    </dependencies>
 </project>
