@@ -46,11 +46,14 @@ public class EmbeddedTomcat extends Tomcat {
         ctx.addLifecycleListener(config);
         // prevent it from looking ( if it finds one - it'll have dup error )
         config.setDefaultWebXml(noDefaultWebXmlPath());
-        if (host == null) {
-            getHost().addChild(ctx);
-        } else {
-            host.addChild(ctx);
+        // get the host first, creates a new std host if not already set
+        getHost();
+        // reset ParentClassLoader 
+        if (!host.getParentClassLoader().equals(Thread.currentThread().getContextClassLoader())) {
+            host.setParentClassLoader(Thread.currentThread().getContextClassLoader());
         }
+        // add the context
+        host.addChild(ctx);
         return ctx;
     }
 
