@@ -4,13 +4,13 @@
     <artifactId>tomcatplugin</artifactId>
     <packaging>jar</packaging>
     <name>tomcatplugin</name>
-    <version>1.14</version>
+    <version>1.15</version>
     <url>https://github.com/Red5/red5-plugins/tree/master/tomcat</url>
     <description>Tomcat web container plugin</description>
     <parent>
         <groupId>org.red5</groupId>
         <artifactId>plugins</artifactId>
-        <version>1.0.8-M8</version>
+        <version>1.0.8-M11</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <build>
@@ -117,16 +117,6 @@
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-jasper</artifactId>
-            <version>${tomcat.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.tomcat.embed</groupId>
-            <artifactId>tomcat-embed-logging-juli</artifactId>
-            <version>${tomcat.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.tomcat.embed</groupId>
-            <artifactId>tomcat-embed-logging-log4j</artifactId>
             <version>${tomcat.version}</version>
         </dependency>
     </dependencies>
