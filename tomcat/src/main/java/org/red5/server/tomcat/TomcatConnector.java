@@ -25,7 +25,7 @@ import java.util.Map;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.AprLifecycleListener;
 import org.apache.coyote.ProtocolHandler;
-import org.apache.coyote.http11.Http11Nio2Protocol
+import org.apache.coyote.http11.Http11Nio2Protocol;
 import org.apache.coyote.http11.Http11NioProtocol;
 import org.red5.logging.Red5LoggerFactory;
 import org.slf4j.Logger;
