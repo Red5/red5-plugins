@@ -25,8 +25,8 @@ import java.util.Map;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.AprLifecycleListener;
 import org.apache.coyote.ProtocolHandler;
+import org.apache.coyote.http11.Http11Nio2Protocol
 import org.apache.coyote.http11.Http11NioProtocol;
-import org.apache.coyote.http11.Http11Protocol;
 import org.red5.logging.Red5LoggerFactory;
 import org.slf4j.Logger;
 
@@ -88,8 +88,8 @@ public class TomcatConnector {
             }
             // apply the bind address to the handler
             ProtocolHandler handler = connector.getProtocolHandler();
-            if (handler instanceof Http11Protocol) {
-                ((Http11Protocol) handler).setAddress(address.getAddress());
+            if (handler instanceof Http11Nio2Protocol) {
+                ((Http11Nio2Protocol) handler).setAddress(address.getAddress());
             } else if (handler instanceof Http11NioProtocol) {
                 ((Http11NioProtocol) handler).setAddress(address.getAddress());
             }
