@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.lang.management.ManagementFactory;
 import java.net.BindException;
+import java.security.Security;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,7 @@ import java.util.concurrent.Future;
 import javax.management.JMX;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
+import javax.security.auth.message.config.AuthConfigFactory;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.xml.parsers.DocumentBuilder;
@@ -44,6 +46,7 @@ import org.apache.catalina.Host;
 import org.apache.catalina.Loader;
 import org.apache.catalina.Realm;
 import org.apache.catalina.Valve;
+import org.apache.catalina.authenticator.jaspic.AuthConfigFactoryImpl;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.ContainerBase;
 import org.apache.catalina.core.StandardContext;
@@ -78,16 +81,21 @@ import org.w3c.dom.NodeList;
 /**
  * Red5 loader for Tomcat.
  * 
- * http://tomcat.apache.org/tomcat-8.0-doc/api/index.html
+ * http://tomcat.apache.org/tomcat-8.5-doc/api/index.html
  * 
  * @author Paul Gregoire (mondain@gmail.com)
  */
 @ManagedResource(objectName = "org.red5.server:type=TomcatLoader", description = "TomcatLoader")
 public class TomcatLoader extends LoaderBase implements InitializingBean, DisposableBean, LoaderMXBean {
 
-    /*
-     * http://blog.springsource.com/2007/06/11/using-a-shared-parent-application-context-in-a-multi-war-spring-application/
-     */
+    static {
+        // set jaspic AuthConfigFactory to prevent NPEs like this:
+        // java.lang.NullPointerException
+        //     at org.apache.catalina.authenticator.AuthenticatorBase.getJaspicProvider(AuthenticatorBase.java:1140)
+        //     at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:431)
+        //     at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:140)
+        Security.setProperty(AuthConfigFactory.DEFAULT_FACTORY_SECURITY_PROPERTY, AuthConfigFactoryImpl.class.getName());
+    }
 
     /**
      * Filters directory content
@@ -164,7 +172,7 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
     /**
      * Valves
      */
-    protected List<Valve> valves = new ArrayList<Valve>();
+    protected List<Valve> valves = new ArrayList<>();
 
     @Override
     public void afterPropertiesSet() throws Exception {
