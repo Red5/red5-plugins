@@ -26,6 +26,7 @@ import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.core.StandardHost;
 import org.apache.catalina.startup.ContextConfig;
 import org.apache.catalina.startup.Tomcat;
+import org.apache.catalina.webresources.StandardRoot;
 
 /**
  * Extension of Tomcat's Tomcat class, tailored for Red5.
@@ -33,6 +34,8 @@ import org.apache.catalina.startup.Tomcat;
  * @author Paul Gregoire (mondain@gmail.com)
  */
 public class EmbeddedTomcat extends Tomcat {
+
+    private long cacheMaxSize = 1024*1024;
 
     /**
      * @see #addWebapp(String, String)
@@ -52,6 +55,9 @@ public class EmbeddedTomcat extends Tomcat {
         if (!host.getParentClassLoader().equals(Thread.currentThread().getContextClassLoader())) {
             host.setParentClassLoader(Thread.currentThread().getContextClassLoader());
         }
+        StandardRoot standardRoot = new StandardRoot(ctx);
+        standardRoot.setCacheMaxSize(cacheMaxSize);
+        ctx.setResources(standardRoot);
         // add the context
         host.addChild(ctx);
         return ctx;
@@ -79,6 +85,14 @@ public class EmbeddedTomcat extends Tomcat {
         } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException | ClassNotFoundException e) {
             throw new IllegalArgumentException("Can't instantiate context-class " + contextClass + " for host " + host + " and url " + url, e);
         }
+    }
+
+    public long getCacheMaxSize() {
+        return cacheMaxSize;
+    }
+
+    public void setCacheMaxSize(long cacheMaxSize) {
+        this.cacheMaxSize = cacheMaxSize;
     }
 
 }

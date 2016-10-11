@@ -272,7 +272,9 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
         // check naming flag
         Boolean useNaming = Boolean.valueOf(System.getProperty("catalina.useNaming"));
         // create one embedded (server) and use it everywhere
-        embedded = new EmbeddedTomcat();
+        if (embedded == null) {
+            embedded = new EmbeddedTomcat();
+        }
         File serverRootF = new File(serverRoot);
         embedded.getServer().setCatalinaBase(serverRootF);
         embedded.getServer().setCatalinaHome(serverRootF);
