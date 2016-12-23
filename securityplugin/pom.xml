@@ -9,7 +9,7 @@
     <parent>
         <groupId>org.red5</groupId>
         <artifactId>plugins</artifactId>
-        <version>1.0.8-M3</version>
+        <version>1.0.8-RELEASE</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <url>https://code.google.com/p/red5/</url>

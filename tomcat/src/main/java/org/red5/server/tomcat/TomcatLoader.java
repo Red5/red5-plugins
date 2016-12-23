@@ -370,7 +370,7 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
                     log.debug("Wrapper: {}", wrapper);
                     ctx.addChild(wrapper);
                     // add servlet mappings
-                    ctx.addServletMapping("*.php", "QuercusServlet");
+                    ctx.addServletMappingDecoded("*.php", "QuercusServlet");
                 }
                 webappContextDir = null;
             }
@@ -399,8 +399,6 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
             log.debug("Adding host valve: {}", valve);
             ((StandardHost) host).addValve(valve);
         }
-        // baseHost = embedded.createHost(hostName, appRoot);
-        engine.addChild(host);
         // add any additional hosts
         if (hosts != null && !hosts.isEmpty()) {
             // grab current contexts from base host
@@ -427,8 +425,9 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
                 if (!added) {
                     embedded.setConnector(connector);
                     added = true;
+                } else {
+                    embedded.getService().addConnector(connector);
                 }
-                embedded.getService().addConnector(connector);
                 log.trace("Connector oName: {}", connector.getObjectName());
             }
         } catch (Exception ex) {
