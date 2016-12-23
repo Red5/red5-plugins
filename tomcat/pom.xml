@@ -4,13 +4,13 @@
     <artifactId>tomcatplugin</artifactId>
     <packaging>jar</packaging>
     <name>tomcatplugin</name>
-    <version>1.17</version>
+    <version>1.18</version>
     <url>https://github.com/Red5/red5-plugins/tree/master/tomcat</url>
     <description>Tomcat web container plugin</description>
     <parent>
         <groupId>org.red5</groupId>
         <artifactId>plugins</artifactId>
-        <version>1.0.8-M11</version>
+        <version>1.0.8-RELEASE</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <build>
