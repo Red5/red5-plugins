@@ -88,6 +88,7 @@ public class RTMPTLoader extends TomcatLoader {
      * 
      * @throws ServletException
      */
+    @SuppressWarnings("deprecation")
     @Override
     public void start() throws ServletException {
         log.info("Loading RTMPT context");

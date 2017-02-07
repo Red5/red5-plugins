@@ -71,6 +71,7 @@ public class RTMPSLoader extends RTMPTLoader {
      * 
      * @throws ServletException
      */
+    @SuppressWarnings("deprecation")
     @Override
     public void start() throws ServletException {
         log.info("Loading RTMPS context");
