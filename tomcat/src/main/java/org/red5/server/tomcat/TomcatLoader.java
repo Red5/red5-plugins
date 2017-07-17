@@ -39,6 +39,7 @@ import javax.servlet.ServletException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.apache.catalina.Cluster;
 import org.apache.catalina.Container;
 import org.apache.catalina.Context;
 import org.apache.catalina.Engine;
@@ -168,6 +169,12 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
      * Connectors
      */
     protected List<TomcatConnector> connectors;
+    
+    
+    /**
+     * Cluster
+     */
+    private Cluster cluster;
 
     /**
      * Valves
@@ -290,6 +297,10 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
         engine.setName(serviceEngineName);
         // set the default host for our engine
         engine.setDefaultHost(host.getName());
+        
+        if (cluster != null) {
+        	engine.setCluster(cluster);
+        }
         // set the webapp folder if not already specified
         if (webappFolder == null) {
             // Use default webapps directory
@@ -912,5 +923,21 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
     public String toString() {
         return "TomcatLoader [serviceEngineName=" + serviceEngineName + "]";
     }
+
+    /**
+     * Get cluster
+     * @return cluster object
+     */
+    public Cluster getCluster() {
+		return cluster;
+	}
+
+    /**
+     * Set cluster
+     * @param cluster object
+     */
+	public void setCluster(Cluster cluster) {
+		this.cluster = cluster;
+	}
 
 }
