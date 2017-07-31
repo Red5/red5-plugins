@@ -68,6 +68,7 @@ import org.red5.server.util.FileUtil;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.jmx.export.annotation.ManagedResource;
@@ -174,6 +175,7 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
     /**
      * Cluster
      */
+    @Autowired
     private Cluster cluster;
 
     /**
