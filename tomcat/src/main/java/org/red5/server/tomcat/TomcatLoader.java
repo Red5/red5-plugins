@@ -175,7 +175,7 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
     /**
      * Cluster
      */
-    @Autowired
+    @Autowired(required=false)
     private Cluster cluster;
 
     /**
