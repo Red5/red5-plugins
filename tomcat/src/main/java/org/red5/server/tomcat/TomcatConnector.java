@@ -1,14 +1,14 @@
 /*
  * RED5 Open Source Flash Server - https://github.com/Red5/
- * 
+ *
  * Copyright 2006-2016 by respective authors (see below). All rights reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,18 +21,20 @@ package org.red5.server.tomcat;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.AprLifecycleListener;
 import org.apache.coyote.ProtocolHandler;
 import org.apache.coyote.http11.Http11Nio2Protocol;
 import org.apache.coyote.http11.Http11NioProtocol;
+import org.apache.tomcat.util.IntrospectionUtils;
 import org.red5.logging.Red5LoggerFactory;
 import org.slf4j.Logger;
 
 /**
  * Model object to contain a connector, socket address, and connection properties for a Tomcat connection.
- * 
+ *
  * @author Paul Gregoire
  */
 public class TomcatConnector {
@@ -40,6 +42,8 @@ public class TomcatConnector {
     private static Logger log = Red5LoggerFactory.getLogger(TomcatConnector.class);
 
     private Connector connector;
+
+    private Map<String, String> connectorProperties;
 
     private Map<String, String> connectionProperties;
 
@@ -70,6 +74,12 @@ public class TomcatConnector {
             }
             // set port
             connector.setPort(address.getPort());
+            // set any additional connector properties
+            if (connectorProperties != null) {
+                for (Entry<String, String> e : connectorProperties.entrySet()) {
+                    IntrospectionUtils.setProperty(connector, e.getKey(), e.getValue());
+                }
+            }
             // set connection properties
             if (connectionProperties != null) {
                 for (String key : connectionProperties.keySet()) {
@@ -102,7 +112,7 @@ public class TomcatConnector {
 
     /**
      * Returns a local address and port.
-     * 
+     *
      * @param port
      * @return InetSocketAddress
      */
@@ -122,7 +132,7 @@ public class TomcatConnector {
 
     /**
      * Set connection properties for the connector.
-     * 
+     *
      * @param props
      *            connection properties to set
      */
@@ -138,6 +148,26 @@ public class TomcatConnector {
      */
     public Map<String, String> getConnectionProperties() {
         return connectionProperties;
+    }
+
+    /**
+     * Set connection properties for the connector.
+     *
+     * @param props
+     *            connection properties to set
+     */
+    public void setConnectorProperties(Map<String, String> props) {
+        if (connectorProperties == null) {
+            this.connectorProperties = new HashMap<>();
+        }
+        this.connectorProperties.putAll(props);
+    }
+
+    /**
+     * @return the connectionProperties
+     */
+    public Map<String, String> getConnectorProperties() {
+        return connectorProperties;
     }
 
     /**
@@ -166,7 +196,7 @@ public class TomcatConnector {
 
     /**
      * The address and port to which we will bind the connector. If the port is not supplied the default of 5080 will be used. The address and port are to be separated by a colon ':'.
-     * 
+     *
      * @param addressAndPort
      */
     public void setAddress(String addressAndPort) {
