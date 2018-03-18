@@ -4,7 +4,7 @@
     <artifactId>tomcatplugin</artifactId>
     <packaging>jar</packaging>
     <name>tomcatplugin</name>
-    <version>1.18</version>
+    <version>1.19</version>
     <url>https://github.com/Red5/red5-plugins/tree/master/tomcat</url>
     <description>Tomcat web container plugin</description>
     <parent>
@@ -19,10 +19,10 @@
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <compilerVersion>1.7</compilerVersion>
+                    <compilerVersion>1.8</compilerVersion>
                     <fork>true</fork>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                     <executable>${maven.compiler.executable}</executable>
                 </configuration>
             </plugin>
