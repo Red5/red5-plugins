@@ -6,7 +6,8 @@
         <version>1.0.10-M7</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>plugins</artifactId>
+    <artifactId>red5-plugins-parent</artifactId>
+    <version>1.0.10-M7</version>
     <packaging>pom</packaging>
     <name>parent</name>
     <url>https://github.com/Red5/red5-plugins</url>
@@ -106,11 +107,6 @@
             <dependency>
                 <groupId>org.red5</groupId>
                 <artifactId>red5-server</artifactId>
-                <version>${project.parent.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.red5</groupId>
-                <artifactId>red5-io</artifactId>
                 <version>${project.parent.version}</version>
             </dependency>
             <dependency>

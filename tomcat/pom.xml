@@ -9,9 +9,11 @@
     <description>Tomcat web container plugin</description>
     <parent>
         <groupId>org.red5</groupId>
-        <artifactId>plugins</artifactId>
+        <artifactId>red5-plugins-parent</artifactId>
         <version>1.0.10-M7</version>
+        <!-- 
         <relativePath>../pom.xml</relativePath>
+         -->
     </parent>
     <build>
         <defaultGoal>install</defaultGoal>
@@ -108,6 +110,9 @@
         <dependency>
             <groupId>org.red5</groupId>
             <artifactId>red5-server</artifactId>
+            <!-- Because of the circular dep, this must be one-behind the current parent version -->
+            <version>1.0.10-M6</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
