@@ -78,8 +78,12 @@ public class DefaultWebSocketEndpoint extends Endpoint {
         log.trace("Session {} closed", session.getId());
         // get the connection
         WebSocketConnection conn = scope.getConnectionBySessionId(session.getId());
-        // remove the connection
-        manager.removeConnection(conn);
+        if (conn != null) {
+            // remove the connection
+            manager.removeConnection(conn);
+        } else {
+            log.debug("Connection for id: {} was not found in the scope: {}", session.getId(), scope.getPath());
+        }
     }
 
     @Override

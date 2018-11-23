@@ -18,7 +18,10 @@ import org.red5.net.websocket.WSConstants;
 import org.red5.net.websocket.WebSocketPlugin;
 import org.red5.net.websocket.WebSocketScope;
 import org.red5.net.websocket.WebSocketScopeManager;
+import org.red5.net.websocket.listener.IWebSocketDataListener;
+import org.red5.server.api.scope.IScope;
 import org.red5.server.plugin.PluginRegistry;
+import org.red5.server.util.ScopeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +34,9 @@ public class DefaultServerEndpointConfigurator extends ServerEndpointConfig.Conf
 
     private final Logger log = LoggerFactory.getLogger(DefaultServerEndpointConfigurator.class);
 
+    // application scope associated with this endpoint configurator
+    private IScope applicationScope = null;
+    
     // Cross-origin policy enable/disabled (defaults to the plugin's setting)
     private boolean crossOriginPolicy = WebSocketPlugin.isCrossOriginPolicy();
 
@@ -121,25 +127,61 @@ public class DefaultServerEndpointConfigurator extends ServerEndpointConfig.Conf
             path = path.substring(0, idx);
         }
         // get the manager
-        WebSocketScopeManager manager = ((WebSocketPlugin) PluginRegistry.getPlugin(WebSocketPlugin.NAME)).getManager(path);
+        WebSocketPlugin plugin = (WebSocketPlugin) PluginRegistry.getPlugin(WebSocketPlugin.NAME);
+        WebSocketScopeManager manager = plugin.getManager(path);
         // add the websocket scope manager to the user props
         sec.getUserProperties().put(WSConstants.WS_MANAGER, manager);
         // get the associated scope
         WebSocketScope scope = manager.getScope(path);
         log.debug("WebSocketScope: {}", scope);
         if (scope == null) {
-
+            // split up the path into usable scope names
+            String[] paths = path.split("\\/");
+            // parent scope
+            IScope appScope = Optional.ofNullable(applicationScope).orElse(plugin.getApplicationScope(path));
+            IScope parentScope = appScope;
+            // room scope
+            IScope roomScope = null;
+            // create child scopes
+            log.debug("Creating child websocket scope of {} for path: {} split: {}", applicationScope, path, Arrays.toString(paths));
+            for (int i = 2; i < paths.length; i++) {
+                // start with the first room and proceed from there
+                roomScope = ScopeUtils.resolveScope(parentScope, paths[i]);
+                // if the room scope doesnt already exist create it
+                if (roomScope == null) {
+                    if (parentScope.createChildScope(paths[i])) {
+                        roomScope = ScopeUtils.resolveScope(parentScope, paths[i]);
+                    }
+                }
+                log.debug("Parent scope: {} room scope: {}", parentScope, roomScope);
+                parentScope = roomScope;
+            }
+            // create and add the websocket scope for the new room scope
+            manager.makeScope(roomScope);
+            // get the new ws scope
+            scope = manager.getScope(path);
+            // copy the listeners from the app websocket scope
+            Set<IWebSocketDataListener> listeners = ((WebSocketScope) appScope.getAttribute(WSConstants.WS_SCOPE)).getListeners();
+            for (IWebSocketDataListener listener : listeners) {
+                log.debug("Adding listener: {}", listener);
+                scope.addListener(listener);
+            }
         }
         // add the websocket scope to the user props
         sec.getUserProperties().put(WSConstants.WS_SCOPE, scope);
-        // lookup or create connection for scope
-        //HttpSession session = (HttpSession) request.getHttpSession();
-        //log.debug("HttpSession id: {}", session.getId());
         // run through any modifiers
         handshakeModifiers.forEach(modifier -> {
             modifier.modifyHandshake(request, response);
         });
         super.modifyHandshake(sec, request, response);
+    }
+
+    public IScope getApplicationScope() {
+        return applicationScope;
+    }
+
+    public void setApplicationScope(IScope applicationScope) {
+        this.applicationScope = applicationScope;
     }
 
     public boolean isCrossOriginPolicy() {

@@ -176,6 +176,17 @@ Lastly, the websocket filter must be added to each web application that will act
     </filter-mapping>
 ```
 
+Extending the WebSocket Endpoint
+---------------------------
+Implementers may extend the default websocket endpoint class provided by this plugin `org.red5.net.websocket.server.DefaultWebSocketEndpoint`. The first step is to become familiar with the class and then `extend` it in your application; once that is complete, your class must be placed in the `lib` directory of your Red5 server, not the `webapps/yourapp/WEB-INF/lib` directory. Lastly, in your webapp descriptor `webapps/yourapp/WEB-INF/web.xml` file, an entry named `wsEndpointClass` will need to be made for your class:
+```xml
+    <context-param>
+        <param-name>wsEndpointClass</param-name>
+        <param-value>com.mydomain.websocket.MyWebSocketEndpoint</param-value>
+    </context-param>
+```
+One reason to extend the endpoint for your own use is because the default endpoint implementation only handles text data.
+
 
 Security Features
 -------------------

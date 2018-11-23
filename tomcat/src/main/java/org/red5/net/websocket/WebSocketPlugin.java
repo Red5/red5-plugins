@@ -232,6 +232,19 @@ public class WebSocketPlugin extends Red5Plugin {
     }
 
     /**
+     * Returns the application scope for a given path.
+     * 
+     * @param path
+     * @return IScope
+     */
+    public IScope getApplicationScope(String path) {
+        // set a reference to the application scope so we can create room scopes
+        String applicationScopeName = path.split("\\/")[1];
+        log.debug("Looking for application scope: {}", applicationScopeName);
+        return managerMap.keySet().stream().filter(scope -> (ScopeUtils.isApp(scope) && scope.getName().equals(applicationScopeName))).findFirst().get(); 
+    }
+    
+    /**
      * Returns a WebSocketScopeManager for a given scope.
      * 
      * @param scope
@@ -364,6 +377,16 @@ public class WebSocketPlugin extends Red5Plugin {
             container = new DefaultWsServerContainer(servletContext);
             // get a configurator instance
             ServerEndpointConfig.Configurator configurator = (ServerEndpointConfig.Configurator) WebSocketPlugin.getWsConfiguratorInstance();
+            log.debug("Checking for CORS");
+            // check for allowed origins override in this servlet context
+            Optional<Object> crossOpt = Optional.ofNullable(servletContext.getAttribute("crossOriginPolicy"));
+            if (crossOpt.isPresent() && Boolean.valueOf((String) crossOpt.get())) {
+                Optional<String> opt = Optional.ofNullable((String) servletContext.getAttribute("allowedOrigins"));
+                if (opt.isPresent()) {
+                    ((DefaultServerEndpointConfigurator) configurator).setAllowedOrigins(opt.get().split(","));
+                }
+            }
+            log.debug("Checking for endpoint override");
             // check for endpoint override and use default if not configured
             String wsEndpointClass = Optional.ofNullable((String) servletContext.getAttribute("wsEndpointClass")).orElse("org.red5.net.websocket.server.DefaultWebSocketEndpoint");
             try {

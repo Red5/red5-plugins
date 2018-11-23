@@ -106,7 +106,7 @@ public class WebSocketScope implements InitializingBean, DisposableBean {
      * @return WebSocketConnection for the given id or null if not found
      */
     public WebSocketConnection getConnectionBySessionId(String id) {
-        Optional<WebSocketConnection> opt = conns.stream().filter(conn -> conn.getHttpSessionId().equals(id)).findFirst();
+        Optional<WebSocketConnection> opt = conns.stream().filter(conn -> id.equals(conn.getHttpSessionId())).findFirst();
         if (opt.isPresent()) {
             return opt.get();
         }
