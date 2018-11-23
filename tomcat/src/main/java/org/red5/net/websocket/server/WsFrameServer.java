@@ -14,6 +14,8 @@ import org.apache.tomcat.websocket.Transformation;
 import org.apache.tomcat.websocket.WsFrameBase;
 import org.apache.tomcat.websocket.WsIOException;
 import org.apache.tomcat.websocket.WsSession;
+import org.red5.net.websocket.WSConstants;
+import org.red5.net.websocket.WebSocketConnection;
 
 public class WsFrameServer extends WsFrameBase {
 
@@ -94,8 +96,13 @@ public class WsFrameServer extends WsFrameBase {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(applicationClassLoader);
+            // set connection local to the message handler so WSMessage will contain the connection
+            ((DefaultWebSocketEndpoint) wsSession.getLocal()).setConnectionLocal((WebSocketConnection) wsSession.getUserProperties().get(WSConstants.WS_CONNECTION));
+            // super!
             super.sendMessageText(last);
         } finally {
+            // clear thread local
+            ((DefaultWebSocketEndpoint) wsSession.getLocal()).setConnectionLocal(null);
             Thread.currentThread().setContextClassLoader(cl);
         }
     }
@@ -105,8 +112,13 @@ public class WsFrameServer extends WsFrameBase {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(applicationClassLoader);
+            // set connection local to the message handler so WSMessage will contain the connection
+            ((DefaultWebSocketEndpoint) wsSession.getLocal()).setConnectionLocal((WebSocketConnection) wsSession.getUserProperties().get(WSConstants.WS_CONNECTION));
+            // super!
             super.sendMessageBinary(msg, last);
         } finally {
+            // clear thread local
+            ((DefaultWebSocketEndpoint) wsSession.getLocal()).setConnectionLocal(null);
             Thread.currentThread().setContextClassLoader(cl);
         }
     }

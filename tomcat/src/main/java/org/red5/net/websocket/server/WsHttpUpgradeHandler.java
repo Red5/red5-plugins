@@ -105,6 +105,7 @@ public class WsHttpUpgradeHandler implements InternalHttpUpgradeHandler {
         ClassLoader cl = t.getContextClassLoader();
         t.setContextClassLoader(applicationClassLoader);
         try {
+            // instance a remote endpoint server
             wsRemoteEndpointServer = new WsRemoteEndpointImplServer(socketWrapper);
             wsSession = new WsSession(ep, wsRemoteEndpointServer, webSocketContainer, handshakeRequest.getRequestURI(), handshakeRequest.getParameterMap(), handshakeRequest.getQueryString(), handshakeRequest.getUserPrincipal(), httpSessionId, negotiatedExtensions, subProtocol, pathParameters, secure, endpointConfig);
             wsFrame = new WsFrameServer(socketWrapper, wsSession, transformation, applicationClassLoader);
@@ -122,15 +123,17 @@ public class WsHttpUpgradeHandler implements InternalHttpUpgradeHandler {
             conn.setAttribute(WSConstants.WS_HEADER_REMOTE_PORT, socketWrapper.getRemotePort());
             // add the request headers
             conn.setHeaders(handshakeRequest.getHeaders());
+            // add the connection to the user props
+            endpointConfig.getUserProperties().put(WSConstants.WS_CONNECTION, conn);
+            // must be added to the session as well since the session ctor copies from the endpoint and doesnt update
+            wsSession.getUserProperties().put(WSConstants.WS_CONNECTION, conn);
+            // fire endpoint handler
+            ep.onOpen(wsSession, endpointConfig);
+            webSocketContainer.registerSession(ep, wsSession);
             // add the connection to the manager
             manager.addConnection(conn);
             // set connected flag
             conn.setConnected();
-            // add the connection to the user props
-            endpointConfig.getUserProperties().put(WSConstants.WS_CONNECTION, conn);
-            // fire endpoint handler
-            ep.onOpen(wsSession, endpointConfig);
-            webSocketContainer.registerSession(ep, wsSession);
         } catch (DeploymentException e) {
             throw new IllegalArgumentException(e);
         } finally {

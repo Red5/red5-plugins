@@ -276,7 +276,7 @@ public class DefaultWsServerContainer extends WsWebSocketContainer implements Se
             unregisterAuthenticatedSession(wsSession, wsSession.getHttpSessionId());
         }
         super.unregisterSession(endpoint, wsSession);
-        log.debug("unregisterSession: {} endpoint: {}", wsSession, endpoint);
+        log.debug("unregisterSession: {} endpoint: {}", wsSession.getId(), endpoint);
     }
 
     private void registerAuthenticatedSession(WsSession wsSession, String httpSessionId) {

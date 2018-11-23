@@ -25,8 +25,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.websocket.Session;
@@ -54,9 +53,6 @@ public class WebSocketConnection extends AttributeStore {
 
     // associated websocket session
     private final WsSession wsSession;
-    
-    // holds session attributes
-    private ConcurrentMap<String, Object> attributes = new ConcurrentHashMap<>();
 
     private String host;
 
@@ -64,13 +60,15 @@ public class WebSocketConnection extends AttributeStore {
 
     private String origin;
 
+    private String userAgent = "undefined";
+
     /**
      * Contains http headers and other web-socket information from the initial request.
      */
     private Map<String, List<String>> headers;
 
     private Map<String, Object> extensions;
-    
+
     /**
      * Contains uri parameters from the initial request.
      */
@@ -83,7 +81,7 @@ public class WebSocketConnection extends AttributeStore {
 
     // stats
     private long readBytes, writtenBytes;
-    
+
     public WebSocketConnection(WebSocketScope scope, Session session) {
         // set our path
         path = scope.getPath();
@@ -106,13 +104,13 @@ public class WebSocketConnection extends AttributeStore {
         // get user props
         Map<String, Object> userProps = wsSession.getUserProperties();
         log.debug("userProps: {}", userProps);
-
     }
 
     /**
      * Sends text to the client.
      * 
-     * @param data string / text data
+     * @param data
+     *            string / text data
      * @throws UnsupportedEncodingException
      */
     public void send(String data) throws UnsupportedEncodingException {
@@ -150,8 +148,8 @@ public class WebSocketConnection extends AttributeStore {
      * Sends a ping to the client.
      * 
      * @param buf
-     * @throws IOException 
-     * @throws IllegalArgumentException 
+     * @throws IOException
+     * @throws IllegalArgumentException
      */
     public void sendPing(byte[] buf) throws IllegalArgumentException, IOException {
         if (log.isTraceEnabled()) {
@@ -168,8 +166,8 @@ public class WebSocketConnection extends AttributeStore {
      * Sends a pong back to the client; normally in response to a ping.
      * 
      * @param buf
-     * @throws IOException 
-     * @throws IllegalArgumentException 
+     * @throws IOException
+     * @throws IllegalArgumentException
      */
     public void sendPong(byte[] buf) throws IllegalArgumentException, IOException {
         if (log.isTraceEnabled()) {
@@ -188,7 +186,7 @@ public class WebSocketConnection extends AttributeStore {
     public void close() {
         if (connected.compareAndSet(true, false)) {
             // TODO disconnect from scope etc...
-            
+
             // normal close
             if (wsSession != null) {
                 try {
@@ -201,6 +199,10 @@ public class WebSocketConnection extends AttributeStore {
 
     public long getReadBytes() {
         return readBytes;
+    }
+
+    public void updateReadBytes(long read) {
+        readBytes += read;
     }
 
     public long getWrittenBytes() {
@@ -244,7 +246,8 @@ public class WebSocketConnection extends AttributeStore {
     }
 
     /**
-     * @param origin the origin to set
+     * @param origin
+     *            the origin to set
      */
     public void setOrigin(String origin) {
         this.origin = origin;
@@ -264,7 +267,8 @@ public class WebSocketConnection extends AttributeStore {
     }
 
     /**
-     * @param path the path to set
+     * @param path
+     *            the path to set
      */
     public void setPath(String path) {
         if (path.charAt(path.length() - 1) == '/') {
@@ -290,19 +294,27 @@ public class WebSocketConnection extends AttributeStore {
      */
     public String getHttpSessionId() {
         return wsSession.getHttpSessionId();
-    }    
-    
+    }
+
+    /**
+     * Returns the user agent.
+     * 
+     * @return userAgent
+     */
+    public String getUserAgent() {
+        return userAgent;
+    }
+
     /**
      * Sets the incoming headers.
      * 
      * @param headers
      */
     public void setHeaders(Map<String, List<String>> headers) {
-        if (headers.containsKey(WSConstants.HTTP_HEADER_USERAGENT)) {
-            attributes.put(WSConstants.HTTP_HEADER_USERAGENT, headers.get(WSConstants.HTTP_HEADER_USERAGENT).get(0));
-        }
-        host = headers.get(Constants.HOST_HEADER_NAME).get(0);
-        origin = headers.get(Constants.ORIGIN_HEADER_NAME).get(0);
+        userAgent = Optional.ofNullable(headers.get(WSConstants.HTTP_HEADER_USERAGENT).get(0)).orElse(headers.get(WSConstants.HTTP_HEADER_USERAGENT.toLowerCase()).get(0));
+        host = Optional.ofNullable(headers.get(Constants.HOST_HEADER_NAME).get(0)).orElse(headers.get(Constants.HOST_HEADER_NAME.toLowerCase()).get(0));
+        origin = Optional.ofNullable(headers.get(Constants.ORIGIN_HEADER_NAME).get(0)).orElse(headers.get(Constants.ORIGIN_HEADER_NAME.toLowerCase()).get(0));
+        log.debug("Set from headers - user-agent: {} host: {} origin: {}", userAgent, host, origin);
         this.headers = headers;
     }
 

@@ -58,7 +58,8 @@ public class DefaultWebSocketEndpoint extends Endpoint {
      * If this is the case, we would need a variable holder for the variables that are accessed by the Room thread, and read the reference to the
      * holder at the beginning of onOpen, onMessage, onClose methods to ensure the room thread always gets the correct instance of the variable holder.
      */
-    private ThreadLocal<WebSocketConnection> conn = new ThreadLocal<>();
+
+    private ThreadLocal<WebSocketConnection> connectionLocal = new ThreadLocal<>();
 
     @Override
     public void onOpen(Session session, EndpointConfig config) {
@@ -70,19 +71,15 @@ public class DefaultWebSocketEndpoint extends Endpoint {
         manager = (WebSocketScopeManager) config.getUserProperties().get(WSConstants.WS_MANAGER);
         // get ws scope from user props
         scope = (WebSocketScope) config.getUserProperties().get(WSConstants.WS_SCOPE);
-        // set connection to thread local
-        conn.set((WebSocketConnection) config.getUserProperties().get(WSConstants.WS_CONNECTION));
     }
 
     @Override
     public void onClose(Session session, CloseReason closeReason) {
         log.trace("Session {} closed", session.getId());
         // get the connection
-        //WebSocketConnection conn = scope.getConnectionBySessionId(session.getId());
+        WebSocketConnection conn = scope.getConnectionBySessionId(session.getId());
         // remove the connection
-        manager.removeConnection(conn.get());
-        // clear the connection
-        conn.set(null);
+        manager.removeConnection(conn);
     }
 
     @Override
@@ -104,6 +101,14 @@ public class DefaultWebSocketEndpoint extends Endpoint {
         }
     }
 
+    public WebSocketConnection getConnectionLocal() {
+        return connectionLocal.get();
+    }
+
+    public void setConnectionLocal(WebSocketConnection connection) {
+        this.connectionLocal.set(connection);
+    }
+
     private final MessageHandler.Whole<String> stringHandler = new MessageHandler.Whole<String>() {
 
         @Override
@@ -112,13 +117,16 @@ public class DefaultWebSocketEndpoint extends Endpoint {
                 log.trace("Message received {}", message);
             }
             try {
+                // create a websocket message and add the current connection for listener access
                 WSMessage wsMessage = new WSMessage(message);
-                wsMessage.setConnection(conn.get());
+                wsMessage.setConnection(connectionLocal.get());
+                // fire the message off to the scope for handling
                 scope.onMessage(wsMessage);
             } catch (UnsupportedEncodingException e) {
                 log.warn("Exception on message", e);
             }
         }
+
     };
 
 }

@@ -215,13 +215,28 @@ To enable websocket support in your application, add this to your appStart() met
   WebSocketScopeManager manager = ((WebSocketPlugin) PluginRegistry.getPlugin(WebSocketPlugin.NAME)).getManager(scope);
   manager.setApplication(this);
 ```
-
 For clean-up add this to appStop():
 
 ```
   WebSocketScopeManager manager = ((WebSocketPlugin) PluginRegistry.getPlugin(WebSocketPlugin.NAME)).getManager(scope);
   manager.stop();
 ```
+Lastly, the websocket filter must be added to each web application that will act as a websocket end point. In the webapp descriptor `webapps/myapp/WEB-INF/web.xml` add this entry alongside any other filters or servlets.
+```xml
+    <!-- WebSocket filter -->
+    <filter>
+        <filter-name>WebSocketFilter</filter-name>
+        <filter-class>org.red5.net.websocket.server.WsFilter</filter-class>
+        <async-supported>true</async-supported>
+    </filter>
+    <filter-mapping>
+        <filter-name>WebSocketFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+        <dispatcher>FORWARD</dispatcher>
+    </filter-mapping>
+```
+
 
 Security Features
 -------------------
