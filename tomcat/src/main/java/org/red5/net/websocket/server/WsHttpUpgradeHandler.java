@@ -7,21 +7,25 @@ import java.util.Map;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.WebConnection;
 import javax.websocket.CloseReason;
+import javax.websocket.CloseReason.CloseCodes;
 import javax.websocket.DeploymentException;
 import javax.websocket.Endpoint;
 import javax.websocket.EndpointConfig;
 import javax.websocket.Extension;
-import javax.websocket.CloseReason.CloseCodes;
 
 import org.apache.coyote.http11.upgrade.InternalHttpUpgradeHandler;
+import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
 import org.apache.tomcat.util.net.SSLSupport;
 import org.apache.tomcat.util.net.SocketEvent;
 import org.apache.tomcat.util.net.SocketWrapperBase;
-import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
 import org.apache.tomcat.util.res.StringManager;
 import org.apache.tomcat.websocket.Transformation;
 import org.apache.tomcat.websocket.WsIOException;
 import org.apache.tomcat.websocket.WsSession;
+import org.red5.net.websocket.WSConstants;
+import org.red5.net.websocket.WebSocketConnection;
+import org.red5.net.websocket.WebSocketScope;
+import org.red5.net.websocket.WebSocketScopeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,6 +110,25 @@ public class WsHttpUpgradeHandler implements InternalHttpUpgradeHandler {
             wsFrame = new WsFrameServer(socketWrapper, wsSession, transformation, applicationClassLoader);
             // WsFrame adds the necessary final transformations. Copy the completed transformation chain to the remote end point.
             wsRemoteEndpointServer.setTransformation(wsFrame.getTransformation());
+            // get the ws scope manager from user props
+            WebSocketScopeManager manager = (WebSocketScopeManager) endpointConfig.getUserProperties().get(WSConstants.WS_MANAGER);
+            // get ws scope from user props
+            WebSocketScope scope = (WebSocketScope) endpointConfig.getUserProperties().get(WSConstants.WS_SCOPE);
+            // create a ws connection instance
+            WebSocketConnection conn = new WebSocketConnection(scope, wsSession);
+            log.debug("New connection: {}", conn);
+            // set ip and port
+            conn.setAttribute(WSConstants.WS_HEADER_REMOTE_IP, socketWrapper.getRemoteAddr());
+            conn.setAttribute(WSConstants.WS_HEADER_REMOTE_PORT, socketWrapper.getRemotePort());
+            // add the request headers
+            conn.setHeaders(handshakeRequest.getHeaders());
+            // add the connection to the manager
+            manager.addConnection(conn);
+            // set connected flag
+            conn.setConnected();
+            // add the connection to the user props
+            endpointConfig.getUserProperties().put(WSConstants.WS_CONNECTION, conn);
+            // fire endpoint handler
             ep.onOpen(wsSession, endpointConfig);
             webSocketContainer.registerSession(ep, wsSession);
         } catch (DeploymentException e) {

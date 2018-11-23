@@ -21,8 +21,6 @@ package org.red5.net.websocket.server;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 
 import javax.websocket.CloseReason;
 import javax.websocket.Endpoint;
@@ -30,12 +28,11 @@ import javax.websocket.EndpointConfig;
 import javax.websocket.MessageHandler;
 import javax.websocket.Session;
 
+import org.red5.net.websocket.WSConstants;
 import org.red5.net.websocket.WebSocketConnection;
-import org.red5.net.websocket.WebSocketPlugin;
 import org.red5.net.websocket.WebSocketScope;
 import org.red5.net.websocket.WebSocketScopeManager;
 import org.red5.net.websocket.model.WSMessage;
-import org.red5.server.plugin.PluginRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,45 +50,15 @@ public class DefaultWebSocketEndpoint extends Endpoint {
     
     // websocket scope where connections connect
     private WebSocketScope scope;
-
-    // lock used during websocket scope creation
-    private final Semaphore lock = new Semaphore(1, true);
-
+    
     /**
-     * Returns the endpoint's associated WebSocketScope or creates a new one.
-     * 
-     * @param create
-     * @return WebSocketScope
-     */
-    public WebSocketScope getScope(boolean create) {
-        log.trace("getScope - create: {}", create);
-        if (create) {
-            if (scope == null) {
-                try {
-                    lock.tryAcquire(256L, TimeUnit.MILLISECONDS);
-                    if (scope == null) {
-                        // create a new ws scope instance
-                        scope = new WebSocketScope();
-                    }
-                } catch (Exception e) {
-                    log.warn("Exception creating/getting scope", e);
-                } finally {
-                    lock.release();
-                }
-            }
-        }
-        return scope;
-    }
-
-    /**
-     * The scope that is associated with this Endpoint and the current room. Note that this variable is only accessed from the Room Thread. <br>
-     *
      * TODO: Currently, Tomcat uses an Endpoint instance once - however the java doc of endpoint says: "Each instance of a websocket endpoint is
      * guaranteed not to be called by more than one thread at a time per active connection." This could mean that after calling onClose(), the
      * instance could be reused for another connection so onOpen() will get called (possibly from another thread).<br>
      * If this is the case, we would need a variable holder for the variables that are accessed by the Room thread, and read the reference to the
      * holder at the beginning of onOpen, onMessage, onClose methods to ensure the room thread always gets the correct instance of the variable holder.
      */
+    private ThreadLocal<WebSocketConnection> conn = new ThreadLocal<>();
 
     @Override
     public void onOpen(Session session, EndpointConfig config) {
@@ -99,42 +66,23 @@ public class DefaultWebSocketEndpoint extends Endpoint {
         // Set maximum messages size to 10,000 bytes
         session.setMaxTextMessageBufferSize(10000);
         session.addMessageHandler(stringHandler);
-        // get the uri / path
-        String path = session.getRequestURI().toString();
         // get the manager
-        if (manager == null) {
-            manager = ((WebSocketPlugin) PluginRegistry.getPlugin(WebSocketPlugin.NAME)).getManager(path);
-        }
-        // lookup the scope or create it
-        WebSocketScope wsScope = manager.getScope(path);
-        if (wsScope == null) {
-            wsScope = getScope(true);
-            // set the path
-            wsScope.setPath(path);
-            // register the scope
-            manager.addWebSocketScope(wsScope);
-        }
-        // set local var
-        scope = wsScope;
+        manager = (WebSocketScopeManager) config.getUserProperties().get(WSConstants.WS_MANAGER);
+        // get ws scope from user props
+        scope = (WebSocketScope) config.getUserProperties().get(WSConstants.WS_SCOPE);
+        // set connection to thread local
+        conn.set((WebSocketConnection) config.getUserProperties().get(WSConstants.WS_CONNECTION));
     }
 
     @Override
     public void onClose(Session session, CloseReason closeReason) {
         log.trace("Session {} closed", session.getId());
         // get the connection
-        WebSocketConnection conn = scope.getConnectionBySessionId(session.getId());
+        //WebSocketConnection conn = scope.getConnectionBySessionId(session.getId());
         // remove the connection
-        if (manager == null) {
-            // get the uri / path
-            String path = session.getRequestURI().toString();
-            WebSocketPlugin plugin = (WebSocketPlugin) PluginRegistry.getPlugin(WebSocketPlugin.NAME);
-            manager = plugin.getManager(path);
-        }
-        if (manager != null) {
-            manager.removeConnection(conn);
-        } else {
-            log.debug("WebSocket manager was not found");
-        }        
+        manager.removeConnection(conn.get());
+        // clear the connection
+        conn.set(null);
     }
 
     @Override
@@ -163,9 +111,9 @@ public class DefaultWebSocketEndpoint extends Endpoint {
             if (log.isTraceEnabled()) {
                 log.trace("Message received {}", message);
             }
-            WSMessage wsMessage;
             try {
-                wsMessage = new WSMessage(message);
+                WSMessage wsMessage = new WSMessage(message);
+                wsMessage.setConnection(conn.get());
                 scope.onMessage(wsMessage);
             } catch (UnsupportedEncodingException e) {
                 log.warn("Exception on message", e);

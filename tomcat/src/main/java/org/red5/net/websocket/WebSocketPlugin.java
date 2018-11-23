@@ -28,11 +28,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import javax.servlet.ServletContext;
-import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
-import javax.websocket.HandshakeResponse;
-import javax.websocket.server.HandshakeRequest;
 import javax.websocket.server.ServerContainer;
 import javax.websocket.server.ServerEndpointConfig;
 import javax.websocket.server.ServerEndpointConfig.Configurator;
@@ -41,13 +38,11 @@ import org.apache.tomcat.websocket.server.Constants;
 import org.red5.net.websocket.listener.IWebSocketDataListener;
 import org.red5.net.websocket.server.DefaultServerEndpointConfigurator;
 import org.red5.net.websocket.server.DefaultWsServerContainer;
-import org.red5.net.websocket.server.HandshakeModifier;
 import org.red5.server.Server;
 import org.red5.server.adapter.MultiThreadedApplicationAdapter;
 import org.red5.server.api.listeners.IScopeListener;
 import org.red5.server.api.scope.IScope;
 import org.red5.server.api.scope.ScopeType;
-import org.red5.server.plugin.PluginRegistry;
 import org.red5.server.plugin.Red5Plugin;
 import org.red5.server.util.ScopeUtils;
 import org.slf4j.Logger;
@@ -345,48 +340,6 @@ public class WebSocketPlugin extends Red5Plugin {
      */
     public static Configurator getWsConfiguratorInstance() {
         DefaultServerEndpointConfigurator configurator = new DefaultServerEndpointConfigurator();
-        // add a modifier for collecting parameters etc for the WebSocketConnection instance
-        configurator.addHandshakeModifier(new HandshakeModifier() {
-
-            @Override
-            public void modifyHandshake(HandshakeRequest request, HandshakeResponse response) {
-                // get the path for this request
-                String path = request.getRequestURI().toString();
-                log.debug("Request URI: {}", path);
-                // trim websocket protocol etc from the path
-                // look for ws:// or wss:// prefixed paths
-                if (path.startsWith("ws")) {
-                    path = path.substring(path.indexOf("ws://") + 5);
-                    // now skip to first slash
-                    path = path.substring(path.indexOf('/'));
-                } else if (path.startsWith("wss")) {
-                    path = path.substring(path.indexOf("wss://") + 6);
-                    // now skip to first slash
-                    path = path.substring(path.indexOf('/'));
-                }
-                // trim off any non-path endings (like /?id=xxx)
-                int idx = -1;
-                if ((idx = path.indexOf("/?")) != -1) {
-                    path = path.substring(0, idx);
-                }
-                // get the associated scope
-                WebSocketScope scope = ((WebSocketPlugin) PluginRegistry.getPlugin(WebSocketPlugin.NAME)).getManager(path).getScope(path);
-                log.debug("WebSocketScope: {}", scope);
-                if (scope == null) {
-
-                }
-                // lookup or create connection for scope
-                HttpSession session = (HttpSession) request.getHttpSession();
-                log.debug("HttpSession id: {}", session.getId());
-                // get the connection
-                WebSocketConnection conn = Optional.ofNullable(scope.getConnectionBySessionId(session.getId())).get();//.orElse(new WebSocketConnection(scope, request));
-                // set headers
-                conn.setHeaders(request.getHeaders());
-                // register conn if new
-
-            }
-
-        });
         return configurator;
     }
 

@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.websocket.Session;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.tomcat.websocket.Constants;
 import org.apache.tomcat.websocket.WsSession;
 import org.red5.server.AttributeStore;
 import org.slf4j.Logger;
@@ -84,6 +85,8 @@ public class WebSocketConnection extends AttributeStore {
     private long readBytes, writtenBytes;
     
     public WebSocketConnection(WebSocketScope scope, Session session) {
+        // set our path
+        path = scope.getPath();
         // cast ws session
         this.wsSession = (WsSession) session;
         // get extensions
@@ -295,9 +298,11 @@ public class WebSocketConnection extends AttributeStore {
      * @param headers
      */
     public void setHeaders(Map<String, List<String>> headers) {
-        if (headers.containsKey("user-agent")) {
-            attributes.put(WSConstants.HTTP_HEADER_USERAGENT, headers.get("user-agent").get(0));
-        }      
+        if (headers.containsKey(WSConstants.HTTP_HEADER_USERAGENT)) {
+            attributes.put(WSConstants.HTTP_HEADER_USERAGENT, headers.get(WSConstants.HTTP_HEADER_USERAGENT).get(0));
+        }
+        host = headers.get(Constants.HOST_HEADER_NAME).get(0);
+        origin = headers.get(Constants.ORIGIN_HEADER_NAME).get(0);
         this.headers = headers;
     }
 

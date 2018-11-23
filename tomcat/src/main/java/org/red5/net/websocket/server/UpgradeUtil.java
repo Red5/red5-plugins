@@ -56,16 +56,16 @@ public class UpgradeUtil {
      * @return <code>true</code> if the request includes a HTTP Upgrade request for the WebSocket protocol, otherwise <code>false</code>
      */
     public static boolean isWebSocketUpgradeRequest(ServletRequest request, ServletResponse response) {
-        List<String> headers = new ArrayList<>();
-        Enumeration<String> en = ((HttpServletRequest) request).getHeaderNames();
-        while (en.hasMoreElements()) {
-            headers.add(en.nextElement());
+        if (log.isTraceEnabled()) {
+            List<String> headers = new ArrayList<>();
+            Enumeration<String> en = ((HttpServletRequest) request).getHeaderNames();
+            while (en.hasMoreElements()) {
+                headers.add(en.nextElement());
+            }
+            log.trace("Headers: {}", headers);
         }
-        log.debug("Headers: {}", headers);
-        //log.debug("isWebSocketUpgradeRequest - req: {} upgrade token: {}", request, (headerContainsToken((HttpServletRequest) request, Constants.UPGRADE_HEADER_NAME, Constants.UPGRADE_HEADER_VALUE)));
         log.debug("isWebSocketUpgradeRequest: {}", Constants.UPGRADE_HEADER_VALUE.equals(((HttpServletRequest) request).getHeader(Constants.UPGRADE_HEADER_NAME)));
         return ((request instanceof HttpServletRequest) && (response instanceof HttpServletResponse) && Constants.UPGRADE_HEADER_VALUE.equals(((HttpServletRequest) request).getHeader(Constants.UPGRADE_HEADER_NAME)));
-        //return ((request instanceof HttpServletRequest) && (response instanceof HttpServletResponse) && headerContainsToken((HttpServletRequest) request, Constants.UPGRADE_HEADER_NAME, Constants.UPGRADE_HEADER_VALUE) && "GET".equals(((HttpServletRequest) request).getMethod()));
     }
 
     public static void doUpgrade(DefaultWsServerContainer sc, HttpServletRequest req, HttpServletResponse resp, ServerEndpointConfig sec, Map<String, String> pathParams) throws ServletException, IOException {

@@ -14,7 +14,11 @@ import javax.websocket.HandshakeResponse;
 import javax.websocket.server.HandshakeRequest;
 import javax.websocket.server.ServerEndpointConfig;
 
+import org.red5.net.websocket.WSConstants;
 import org.red5.net.websocket.WebSocketPlugin;
+import org.red5.net.websocket.WebSocketScope;
+import org.red5.net.websocket.WebSocketScopeManager;
+import org.red5.server.plugin.PluginRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,6 +101,41 @@ public class DefaultServerEndpointConfigurator extends ServerEndpointConfig.Conf
     @Override
     public void modifyHandshake(ServerEndpointConfig sec, HandshakeRequest request, HandshakeResponse response) {
         //log.debug("modifyHandshake - config: {} req: {} resp: {}", sec, request, response);
+        // get the path for this request
+        String path = request.getRequestURI().toString();
+        log.debug("Request URI: {}", path);
+        // trim websocket protocol etc from the path
+        // look for ws:// or wss:// prefixed paths
+        if (path.startsWith("ws")) {
+            path = path.substring(path.indexOf("ws://") + 5);
+            // now skip to first slash
+            path = path.substring(path.indexOf('/'));
+        } else if (path.startsWith("wss")) {
+            path = path.substring(path.indexOf("wss://") + 6);
+            // now skip to first slash
+            path = path.substring(path.indexOf('/'));
+        }
+        // trim off any non-path endings (like /?id=xxx)
+        int idx = -1;
+        if ((idx = path.indexOf("/?")) != -1) {
+            path = path.substring(0, idx);
+        }
+        // get the manager
+        WebSocketScopeManager manager = ((WebSocketPlugin) PluginRegistry.getPlugin(WebSocketPlugin.NAME)).getManager(path);
+        // add the websocket scope manager to the user props
+        sec.getUserProperties().put(WSConstants.WS_MANAGER, manager);
+        // get the associated scope
+        WebSocketScope scope = manager.getScope(path);
+        log.debug("WebSocketScope: {}", scope);
+        if (scope == null) {
+
+        }
+        // add the websocket scope to the user props
+        sec.getUserProperties().put(WSConstants.WS_SCOPE, scope);
+        // lookup or create connection for scope
+        //HttpSession session = (HttpSession) request.getHttpSession();
+        //log.debug("HttpSession id: {}", session.getId());
+        // run through any modifiers
         handshakeModifiers.forEach(modifier -> {
             modifier.modifyHandshake(request, response);
         });

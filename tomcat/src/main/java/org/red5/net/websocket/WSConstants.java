@@ -58,5 +58,9 @@ public class WSConstants {
     public final static String URI_QS_PARAMETERS = "querystring-parameters";
 
     public final static String IDLE_COUNTER = "idle.counter";
+
+    public static final String WS_HEADER_REMOTE_IP = "remote.ip";
+
+    public static final String WS_HEADER_REMOTE_PORT = "remote.port";
     
 }

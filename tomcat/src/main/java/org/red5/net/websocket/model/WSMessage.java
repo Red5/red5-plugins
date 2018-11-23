@@ -51,10 +51,11 @@ public class WSMessage {
     private long timeStamp = System.currentTimeMillis();
 
     public WSMessage() {
+        payload = IoBuffer.allocate(0);
     }
     
     public WSMessage(String message) throws UnsupportedEncodingException {
-        payload.put(message.getBytes("UTF8")).flip();
+        payload = IoBuffer.wrap(message.getBytes("UTF8"));
     }
 
     /**
