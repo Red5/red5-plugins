@@ -33,14 +33,14 @@ This plugin is meant to provide websocket functionality for applications running
 
 
 
-The previous Red5 WebSocket plugin was developed with the of Takahiko Toda and Dhruv Chopra.
+The previous Red5 WebSocket plugin was developed with assistence from Takahiko Toda and Dhruv Chopra.
 
 ## Configuration
 
-Update the `conf/jee-container.xml` file to suit your needs; http/ws or https/wss.
+Update the `conf/jee-container.xml` file to suit your needs.
 
+*Non-secure* - http and ws:
 ```xml
-
    <bean id="tomcat.server" class="org.red5.server.tomcat.TomcatLoader" depends-on="context.loader,warDeployer" lazy-init="true">
         <property name="websocketEnabled" value="true" />
         <property name="webappFolder" value="${red5.root}/webapps" />
@@ -65,19 +65,10 @@ Update the `conf/jee-container.xml` file to suit your needs; http/ws or https/ws
                <property name="name" value="${http.host}" />
            </bean>
         </property>
-        <property name="valves">
-            <list>
-                <bean id="valve.access" class="org.apache.catalina.valves.AccessLogValve">
-                    <property name="directory" value="log" />
-                    <property name="prefix" value="${http.host}_access." />
-                    <property name="suffix" value=".log" />
-                    <property name="pattern" value="common" />
-                    <property name="rotatable" value="true" />
-                </bean>
-            </list>
-        </property>
     </bean>
-
+```
+*Secure* - https and wss:
+```xml
    <bean id="tomcat.server" class="org.red5.server.tomcat.TomcatLoader" depends-on="context.loader" lazy-init="true">
         <property name="websocketEnabled" value="true" />
         <property name="webappFolder" value="${red5.root}/webapps" />
@@ -127,83 +118,31 @@ Update the `conf/jee-container.xml` file to suit your needs; http/ws or https/ws
     </bean>
 
 ```
-
-To bind to one or many IP addresses and ports:
-
+To bind to more than one IP address / port, add additional `httpConnector` or `httpsConnector` entries:
 ```xml
-<bean id="webSocketTransport" class="org.red5.net.websocket.WebSocketTransport">
-        <property name="addresses">
-            <list>
-            	<value>192.168.1.174</value>
-            	<value>192.168.1.174:8080</value>
-            	<value>192.168.1.174:10080</value>
-            </list>
-        </property>
-</bean>
+    <property name="connectors">
+        <list>
+	    <bean name="httpConnector" class="org.red5.server.tomcat.TomcatConnector">
+	        <property name="protocol" value="org.apache.coyote.http11.Http11Nio2Protocol" />
+	        <property name="address" value="${http.host}:${http.port}" />
+	        <property name="redirectPort" value="${https.port}" />
+	    </bean>
+	    <bean name="httpConnector1" class="org.red5.server.tomcat.TomcatConnector">
+	        <property name="protocol" value="org.apache.coyote.http11.Http11Nio2Protocol" />
+	        <property name="address" value="192.168.1.1:5080" />
+	        <property name="redirectPort" value="${https.port}" />
+	    </bean>
+	    <bean name="httpConnector2" class="org.red5.server.tomcat.TomcatConnector">
+	        <property name="protocol" value="org.apache.coyote.http11.Http11Nio2Protocol" />
+	        <property name="address" value="10.10.10.1:5080" />
+	        <property name="redirectPort" value="${https.port}" />
+	    </bean>
+	</list>
+    </property>
 ```
+*Note*
 
-If you don't want to specify the IP:
-```
-<bean id="webSocketTransport" class="org.red5.net.websocket.WebSocketTransport">
-	<property name="port" value="8080"/>
-</bean>
-
-```
-To support secure communication (wss) add this:
-
-```xml
-    <bean id="webSocketTransportSecure" class="org.red5.net.websocket.WebSocketTransport">
-        <property name="secureConfig">
-            <bean id="webSocketSecureConfig" class="org.red5.net.websocket.SecureWebSocketConfiguration">
-                <property name="keystoreFile" value="conf/keystore"/>
-                <property name="keystorePassword" value="password"/>
-                <property name="truststoreFile" value="conf/truststore"/>
-                <property name="truststorePassword" value="password"/>
-            </bean>
-        </property>
-        <property name="addresses">
-            <list>
-                <value>192.168.1.174:10081</value>
-            </list>
-        </property>
-    </bean>
-```
-If you are not using unlimited strength JCE (you are outside the US), you may have to specify the cipher suites as shown below:
-```xml
-    <bean id="webSocketTransportSecure" class="org.red5.net.websocket.WebSocketTransport">
-        <property name="secureConfig">
-            <bean id="webSocketSecureConfig" class="org.red5.net.websocket.SecureWebSocketConfiguration">
-                <property name="keystoreFile" value="conf/keystore"/>
-                <property name="keystorePassword" value="password"/>
-                <property name="truststoreFile" value="conf/truststore"/>
-                <property name="truststorePassword" value="password"/>
-                <property name="cipherSuites">
-                    <array>
-                        <value>TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256</value>
-                        <value>TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA</value>
-                        <value>TLS_ECDHE_RSA_WITH_RC4_128_SHA</value>
-                        <value>TLS_RSA_WITH_AES_128_CBC_SHA256</value>
-                        <value>TLS_RSA_WITH_AES_128_CBC_SHA</value>
-                        <value>SSL_RSA_WITH_RC4_128_SHA</value>
-                    </array>
-                </property>
-                <property name="protocols">
-                    <array>
-                        <value>TLSv1</value>
-                        <value>TLSv1.1</value>
-                        <value>TLSv1.2</value>
-                    </array>
-                </property>
-            </bean>
-        </property>
-        <property name="addresses">
-            <list>
-                <value>192.168.1.174:10081</value>
-            </list>
-        </property>
-    </bean>
-
-```
+If you are not using unlimited strength JCE (ex. you are outside the USA), your cipher suite selections will fail if any containing `AES_256` are specified.
 
 
 Adding WebSocket to an Application
@@ -242,12 +181,8 @@ Security Features
 -------------------
 Since WebSockets don't implement Same Origin Policy (SOP) nor Cross-Origin Resource Sharing (CORS), we've implemented a means to restrict access via configuration using SOP / CORS logic. To configure the security features, edit your `conf/jee-container.xml` file and locate the bean displayed below:
 ```xml
-    <bean id="webSocketTransport" class="org.red5.net.websocket.WebSocketTransport">
-        <property name="addresses">
-            <list>
-                <value>${ws.host}:${ws.port}</value>
-            </list>
-        </property>
+   <bean id="tomcat.server" class="org.red5.server.tomcat.TomcatLoader" depends-on="context.loader" lazy-init="true">
+        <property name="websocketEnabled" value="true" />
         <property name="sameOriginPolicy" value="false" />
         <property name="crossOriginPolicy" value="true" />
         <property name="allowedOrigins">
@@ -256,7 +191,6 @@ Since WebSockets don't implement Same Origin Policy (SOP) nor Cross-Origin Resou
                 <value>red5.org</value>
             </array>
         </property>
-    </bean>
 ```
 Properties:
  * [sameOriginPolicy](https://www.w3.org/Security/wiki/Same_Origin_Policy) - Enables or disables SOP. The logic differs from standard web SOP by *NOT* enforcing protocol and port.
@@ -275,7 +209,7 @@ Replace the wsUri variable with your applications path.
 <meta charset="utf-8" />  
 <title>WebSocket Test</title>  
 <script language="javascript" type="text/javascript">  
-var wsUri = "ws://192.168.1.174:10080/myapp"; 
+var wsUri = "ws://192.168.1.174:10080/myapp/"; 
 var output;  function init() { output = document.getElementById("output"); testWebSocket(); }  function testWebSocket() { websocket = new WebSocket(wsUri); websocket.onopen = function(evt) { onOpen(evt) }; websocket.onclose = function(evt) { onClose(evt) }; websocket.onmessage = function(evt) { onMessage(evt) }; websocket.onerror = function(evt) { onError(evt) }; }  function onOpen(evt) { writeToScreen("CONNECTED"); doSend("WebSocket rocks"); }  function onClose(evt) { writeToScreen("DISCONNECTED"); }  function onMessage(evt) { writeToScreen('<span style="color: blue;">RESPONSE: ' + evt.data+'</span>'); websocket.close(); }  function onError(evt) { writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data); }  function doSend(message) { writeToScreen("SENT: " + message);  websocket.send(message); }  function writeToScreen(message) { var pre = document.createElement("p"); pre.style.wordWrap = "break-word"; pre.innerHTML = message; output.appendChild(pre); }  window.addEventListener("load", init, false);  </script>  <h2>WebSocket Test</h2> <div id="output"></div>
 ```
 
