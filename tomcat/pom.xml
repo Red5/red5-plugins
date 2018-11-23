@@ -4,9 +4,9 @@
     <artifactId>tomcatplugin</artifactId>
     <packaging>jar</packaging>
     <name>tomcatplugin</name>
-    <version>1.20</version>
+    <version>2.0.0</version>
     <url>https://github.com/Red5/red5-plugins/tree/master/tomcat</url>
-    <description>Tomcat web container plugin</description>
+    <description>Tomcat web and websocket container plugin</description>
     <parent>
         <groupId>org.red5</groupId>
         <artifactId>red5-plugins-parent</artifactId>
@@ -15,6 +15,11 @@
         <relativePath>../pom.xml</relativePath>
          -->
     </parent>
+    <properties>
+        <bc.version>1.59</bc.version>
+        <tomcat.version>8.5.35</tomcat.version>
+        <tyrus.version>1.13.1</tyrus.version>
+    </properties>
     <build>
         <defaultGoal>install</defaultGoal>
         <plugins>
@@ -81,6 +86,9 @@
                         <manifest>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
+                        <manifestEntries>
+                            <Red5-Plugin-Main-Class>org.red5.net.websocket.WebSocketPlugin</Red5-Plugin-Main-Class>
+                        </manifestEntries>
                     </archive>
                 </configuration>
             </plugin>
@@ -111,7 +119,6 @@
             <groupId>org.red5</groupId>
             <artifactId>red5-server</artifactId>
             <!-- Because of the circular dep, this must be one-behind the current parent version -->
-            <version>1.0.10-M6</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -123,6 +130,22 @@
             <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-jasper</artifactId>
             <version>${tomcat.version}</version>
+        </dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.tomcat/tomcat-websocket -->
+		<dependency>
+		    <groupId>org.apache.tomcat</groupId>
+		    <artifactId>tomcat-websocket</artifactId>
+		    <version>${tomcat.version}</version>
+		</dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.tyrus.bundles</groupId>
+            <artifactId>tyrus-standalone-client-jdk</artifactId>
+            <version>${tyrus.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <profiles>

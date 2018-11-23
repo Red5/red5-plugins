@@ -36,8 +36,6 @@ import javax.management.ObjectName;
 import javax.security.auth.message.config.AuthConfigFactory;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.catalina.Container;
 import org.apache.catalina.Context;
@@ -51,7 +49,6 @@ import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.ContainerBase;
 import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.core.StandardHost;
-import org.apache.catalina.core.StandardWrapper;
 import org.apache.catalina.loader.WebappLoader;
 import org.apache.catalina.realm.JAASRealm;
 import org.apache.catalina.realm.NullRealm;
@@ -73,10 +70,6 @@ import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.web.context.ConfigurableWebApplicationContext;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.XmlWebApplicationContext;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 /**
  * Red5 loader for Tomcat.
@@ -174,6 +167,11 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
      */
     protected List<Valve> valves = new ArrayList<>();
 
+    /**
+     * WebSocket feature
+     */
+    protected boolean websocketEnabled = true;
+
     @Override
     public void afterPropertiesSet() throws Exception {
         start();
@@ -209,23 +207,24 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
         log.debug("Add context - path: {} docbase: {}", contextPath, docBase);
         // instance a context
         org.apache.catalina.Context ctx = embedded.addWebapp(host, contextPath, docBase);
-        if (ctx != null) {
-            // grab the current classloader
-            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            ctx.setParentClassLoader(classLoader);
-            // get the associated loader for the context
-            Object ldr = ctx.getLoader();
-            log.trace("Context loader (null if the context has not been started): {}", ldr);
-            if (ldr == null) {
-                WebappLoader wldr = new WebappLoader(classLoader);
-                // add the Loader to the context
-                ctx.setLoader(wldr);
-            }
-            log.trace("Context loader (check): {} Context classloader: {}", ctx.getLoader(), ctx.getLoader().getClassLoader());
-            LoaderBase.setRed5ApplicationContext(getHostId() + contextPath, new TomcatApplicationContext(ctx));
-        } else {
-            log.trace("Context is null");
+        // if websockets are enabled, filter out the tomcat WS context initializer
+        if (websocketEnabled) {
+            ctx.setContainerSciFilter("WsSci");
         }
+        // grab the current classloader
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        ctx.setParentClassLoader(classLoader);
+        // get the associated loader for the context
+        Object ldr = ctx.getLoader();
+        log.trace("Context loader (null if the context has not been started): {}", ldr);
+        if (ldr == null) {
+            // create a loader
+            WebappLoader wldr = new WebappLoader(classLoader);
+            // add the Loader to the context
+            ctx.setLoader(wldr);
+        }
+        log.trace("Context loader (check): {} Context classloader: {}", ctx.getLoader(), ctx.getLoader().getClassLoader());
+        LoaderBase.setRed5ApplicationContext(getHostId() + contextPath, new TomcatApplicationContext(ctx));        
         return ctx;
     }
 
@@ -279,9 +278,6 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
         embedded.getServer().setCatalinaBase(serverRootF);
         embedded.getServer().setCatalinaHome(serverRootF);
         embedded.setHost(host);
-        // provide default configuration for a context. This is the programmatic equivalent of the default web.xml
-        // default-web.xml
-        //embedded.initWebappDefaults(confRoot);
         // controls if the loggers will be silenced or not
         embedded.setSilent(false);
         // get the engine
@@ -293,7 +289,7 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
         // set the webapp folder if not already specified
         if (webappFolder == null) {
             // Use default webapps directory
-            webappFolder = FileUtil.formatPath(System.getProperty("red5.root"), "/webapps");
+            webappFolder = FileUtil.formatPath(serverRoot, "/webapps");
         }
         System.setProperty("red5.webapp.root", webappFolder);
         log.info("Application root: {}", webappFolder);
@@ -309,7 +305,7 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
                 String webappContextDir = FileUtil.formatPath(appDirBase.getAbsolutePath(), dirName);
                 log.debug("Webapp context directory (full path): {}", webappContextDir);
                 Context ctx = null;
-                if ("/root".equals(dirName) || "/root".equalsIgnoreCase(dirName)) {
+                if ("/root".equalsIgnoreCase(dirName)) {
                     log.trace("Adding ROOT context");
                     ctx = addContext("", webappContextDir);
                 } else {
@@ -317,61 +313,6 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
                     ctx = addContext(dirName, webappContextDir);
                 }
                 log.trace("Context: {}", ctx);
-                //see if the application requests php support
-                String enablePhp = ctx.findParameter("enable-php");
-                //if its null try to read directly
-                if (enablePhp == null) {
-                    File webxml = new File(webappContextDir + "/WEB-INF/", "web.xml");
-                    if (webxml.exists() && webxml.canRead()) {
-                        try {
-                            DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
-                            DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
-                            Document doc = docBuilder.parse(webxml);
-                            // normalize text representation
-                            doc.getDocumentElement().normalize();
-                            log.trace("Root element of the doc is {}", doc.getDocumentElement().getNodeName());
-                            NodeList listOfElements = doc.getElementsByTagName("context-param");
-                            int totalElements = listOfElements.getLength();
-                            log.trace("Total no of elements: {}", totalElements);
-                            for (int s = 0; s < totalElements; s++) {
-                                Node fstNode = listOfElements.item(s);
-                                if (fstNode.getNodeType() == Node.ELEMENT_NODE) {
-                                    Element fstElmnt = (Element) fstNode;
-                                    NodeList fstNmElmntLst = fstElmnt.getElementsByTagName("param-name");
-                                    Element fstNmElmnt = (Element) fstNmElmntLst.item(0);
-                                    NodeList fstNm = fstNmElmnt.getChildNodes();
-                                    String pName = (fstNm.item(0)).getNodeValue();
-                                    log.trace("Param name: {}", pName);
-                                    if ("enable-php".equals(pName)) {
-                                        NodeList lstNmElmntLst = fstElmnt.getElementsByTagName("param-value");
-                                        Element lstNmElmnt = (Element) lstNmElmntLst.item(0);
-                                        NodeList lstNm = lstNmElmnt.getChildNodes();
-                                        String pValue = (lstNm.item(0)).getNodeValue();
-                                        log.trace("Param value: {}", pValue);
-                                        enablePhp = pValue;
-                                        //
-                                        break;
-                                    }
-                                }
-                            }
-                        } catch (Exception e) {
-                            log.warn("Error reading web.xml", e);
-                        }
-                    }
-                    webxml = null;
-                }
-                log.debug("Enable php: {}", enablePhp);
-                if ("true".equals(enablePhp)) {
-                    log.info("Adding PHP (Quercus) servlet for context: {}", ctx.getName());
-                    // add servlet wrapper
-                    StandardWrapper wrapper = (StandardWrapper) ctx.createWrapper();
-                    wrapper.setServletName("QuercusServlet");
-                    wrapper.setServletClass("com.caucho.quercus.servlet.QuercusServlet");
-                    log.debug("Wrapper: {}", wrapper);
-                    ctx.addChild(wrapper);
-                    // add servlet mappings
-                    ctx.addServletMappingDecoded("*.php", "QuercusServlet");
-                }
                 webappContextDir = null;
             }
         }
@@ -783,7 +724,7 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
      * Set the host.
      * 
      * @param host
-     *            host
+     *            Host
      */
     public void setHost(Host host) {
         log.debug("setHost");
@@ -830,6 +771,24 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
     public void setValves(List<Valve> valves) {
         log.debug("setValves: {}", valves.size());
         this.valves.addAll(valves);
+    }
+
+    /**
+     * Returns enabled state of websocket support.
+     * 
+     * @return true if enabled and false otherwise
+     */
+    public boolean isWebsocketEnabled() {
+        return websocketEnabled;
+    }
+
+    /**
+     * Set websocket feature enabled / disabled.
+     * 
+     * @param websocketEnabled
+     */
+    public void setWebsocketEnabled(boolean websocketEnabled) {
+        this.websocketEnabled = websocketEnabled;
     }
 
     /**

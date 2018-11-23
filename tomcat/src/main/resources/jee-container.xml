@@ -2,8 +2,8 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:lang="http://www.springframework.org/schema/lang"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
-                           http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang-3.1.xsd">
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang.xsd">
 
     <!-- 
     The tomcat connectors may be blocking or non-blocking. Select between either option via the constructor-arg.
@@ -15,9 +15,8 @@
 				   			   						
 	<!-- Tomcat without SSL enabled -->			  	
 	<bean id="tomcat.server" class="org.red5.server.tomcat.TomcatLoader" depends-on="context.loader" init-method="start" lazy-init="true">
-
+        <property name="websocketEnabled" value="true" />
         <property name="webappFolder" value="${red5.root}/webapps" />
-        
         <property name="connectors">
             <list>
                 <bean name="httpConnector" class="org.red5.server.tomcat.TomcatConnector">
@@ -27,13 +26,11 @@
                 </bean>     
             </list>
         </property>
-        
         <property name="baseHost">
            <bean class="org.apache.catalina.core.StandardHost">
                <property name="name" value="${http.host}" />
            </bean>     
-        </property>     
-
+        </property>
         <property name="valves">
             <list>
                 <bean id="valve.access" class="org.apache.catalina.valves.AccessLogValve">
@@ -45,15 +42,13 @@
                 </bean>
             </list>
         </property>
-        
     </bean>
  
     <!-- Tomcat with SSL enabled -->
 <!-- 
     <bean id="tomcat.server" class="org.red5.server.tomcat.TomcatLoader" depends-on="context.loader" init-method="start" lazy-init="true">
-
+        <property name="websocketEnabled" value="true" />
         <property name="webappFolder" value="${red5.root}/webapps" />
-        
         <property name="connectors">
             <list>
                 <bean name="httpConnector" class="org.red5.server.tomcat.TomcatConnector">
@@ -106,13 +101,11 @@
                 </bean>             
             </list>
         </property>
-                        
         <property name="baseHost">
             <bean class="org.apache.catalina.core.StandardHost">
                 <property name="name" value="${http.host}" />
             </bean>     
-        </property>   
-
+        </property>
         <property name="valves">
             <list>
                 <bean id="valve.access" class="org.apache.catalina.valves.AccessLogValve">
@@ -124,7 +117,6 @@
                 </bean>
             </list>
         </property>
-        
     </bean>
 -->
 	

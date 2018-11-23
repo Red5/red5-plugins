@@ -1,0 +1,176 @@
+/*
+ * RED5 Open Source Flash Server - https://github.com/red5
+ * 
+ * Copyright 2006-2018 by respective authors (see below). All rights reserved.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.red5.net.websocket.server;
+
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+
+import javax.websocket.CloseReason;
+import javax.websocket.Endpoint;
+import javax.websocket.EndpointConfig;
+import javax.websocket.MessageHandler;
+import javax.websocket.Session;
+
+import org.red5.net.websocket.WebSocketConnection;
+import org.red5.net.websocket.WebSocketPlugin;
+import org.red5.net.websocket.WebSocketScope;
+import org.red5.net.websocket.WebSocketScopeManager;
+import org.red5.net.websocket.model.WSMessage;
+import org.red5.server.plugin.PluginRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Default WebSocket endpoint.
+ * 
+ * @author Paul Gregoire
+ */
+public class DefaultWebSocketEndpoint extends Endpoint {
+
+    private final Logger log = LoggerFactory.getLogger(DefaultWebSocketEndpoint.class);
+
+    // websocket manager for this path / endpoint
+    private WebSocketScopeManager manager;
+    
+    // websocket scope where connections connect
+    private WebSocketScope scope;
+
+    // lock used during websocket scope creation
+    private final Semaphore lock = new Semaphore(1, true);
+
+    /**
+     * Returns the endpoint's associated WebSocketScope or creates a new one.
+     * 
+     * @param create
+     * @return WebSocketScope
+     */
+    public WebSocketScope getScope(boolean create) {
+        log.trace("getScope - create: {}", create);
+        if (create) {
+            if (scope == null) {
+                try {
+                    lock.tryAcquire(256L, TimeUnit.MILLISECONDS);
+                    if (scope == null) {
+                        // create a new ws scope instance
+                        scope = new WebSocketScope();
+                    }
+                } catch (Exception e) {
+                    log.warn("Exception creating/getting scope", e);
+                } finally {
+                    lock.release();
+                }
+            }
+        }
+        return scope;
+    }
+
+    /**
+     * The scope that is associated with this Endpoint and the current room. Note that this variable is only accessed from the Room Thread. <br>
+     *
+     * TODO: Currently, Tomcat uses an Endpoint instance once - however the java doc of endpoint says: "Each instance of a websocket endpoint is
+     * guaranteed not to be called by more than one thread at a time per active connection." This could mean that after calling onClose(), the
+     * instance could be reused for another connection so onOpen() will get called (possibly from another thread).<br>
+     * If this is the case, we would need a variable holder for the variables that are accessed by the Room thread, and read the reference to the
+     * holder at the beginning of onOpen, onMessage, onClose methods to ensure the room thread always gets the correct instance of the variable holder.
+     */
+
+    @Override
+    public void onOpen(Session session, EndpointConfig config) {
+        log.trace("Session {} opened", session.getId());
+        // Set maximum messages size to 10,000 bytes
+        session.setMaxTextMessageBufferSize(10000);
+        session.addMessageHandler(stringHandler);
+        // get the uri / path
+        String path = session.getRequestURI().toString();
+        // get the manager
+        if (manager == null) {
+            manager = ((WebSocketPlugin) PluginRegistry.getPlugin(WebSocketPlugin.NAME)).getManager(path);
+        }
+        // lookup the scope or create it
+        WebSocketScope wsScope = manager.getScope(path);
+        if (wsScope == null) {
+            wsScope = getScope(true);
+            // set the path
+            wsScope.setPath(path);
+            // register the scope
+            manager.addWebSocketScope(wsScope);
+        }
+        // set local var
+        scope = wsScope;
+    }
+
+    @Override
+    public void onClose(Session session, CloseReason closeReason) {
+        log.trace("Session {} closed", session.getId());
+        // get the connection
+        WebSocketConnection conn = scope.getConnectionBySessionId(session.getId());
+        // remove the connection
+        if (manager == null) {
+            // get the uri / path
+            String path = session.getRequestURI().toString();
+            WebSocketPlugin plugin = (WebSocketPlugin) PluginRegistry.getPlugin(WebSocketPlugin.NAME);
+            manager = plugin.getManager(path);
+        }
+        if (manager != null) {
+            manager.removeConnection(conn);
+        } else {
+            log.debug("WebSocket manager was not found");
+        }        
+    }
+
+    @Override
+    public void onError(Session session, Throwable t) {
+        // Most likely cause is a user closing their browser. Check to see if the root cause is EOF and if it is ignore it.
+        // Protect against infinite loops.
+        int count = 0;
+        Throwable root = t;
+        while (root.getCause() != null && count < 20) {
+            root = root.getCause();
+            count++;
+        }
+        if (root instanceof EOFException) {
+            // Assume this is triggered by the user closing their browser and ignore it.
+        } else if (!session.isOpen() && root instanceof IOException) {
+            // IOException after close. Assume this is a variation of the user closing their browser (or refreshing very quickly) and ignore it.
+        } else {
+            log.warn("onError: {}", t.toString(), t);
+        }
+    }
+
+    private final MessageHandler.Whole<String> stringHandler = new MessageHandler.Whole<String>() {
+
+        @Override
+        public void onMessage(final String message) {
+            if (log.isTraceEnabled()) {
+                log.trace("Message received {}", message);
+            }
+            WSMessage wsMessage;
+            try {
+                wsMessage = new WSMessage(message);
+                scope.onMessage(wsMessage);
+            } catch (UnsupportedEncodingException e) {
+                log.warn("Exception on message", e);
+            }
+        }
+    };
+
+}
