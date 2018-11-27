@@ -26,6 +26,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.websocket.Session;
@@ -82,6 +87,15 @@ public class WebSocketConnection extends AttributeStore {
     // stats
     private long readBytes, writtenBytes;
 
+    // protect against mulitiple threads attempting to send at once
+    private Semaphore sendLock = new Semaphore(1, true);
+
+    // future used for sending to prevent concurrent write exceptions
+    private Future<Void> sendFuture;
+
+    // temporary storage for outgoing text messages
+    private ConcurrentLinkedQueue<String> outputQueue = new ConcurrentLinkedQueue<>();
+    
     public WebSocketConnection(WebSocketScope scope, Session session) {
         // set our path
         path = scope.getPath();
@@ -114,13 +128,41 @@ public class WebSocketConnection extends AttributeStore {
      * @throws UnsupportedEncodingException
      */
     public void send(String data) throws UnsupportedEncodingException {
-        log.trace("send message: {}", data);
+        log.debug("send message: {}", data);
         // process the incoming string
         if (StringUtils.isNotBlank(data)) {
             if (wsSession != null) {
-                wsSession.getAsyncRemote().sendText(data);
-                // update counter
-                writtenBytes += data.getBytes().length;
+                // add the data to the queue first
+                outputQueue.add(data);
+                // check for an existing send future and if there is one, return and let it do its work
+                if (sendFuture == null || sendFuture.isDone()) {
+                    try {
+                        if (sendLock.tryAcquire(100L, TimeUnit.MILLISECONDS)) {
+                            // we have a lock, so send away; drain the queue
+                            outputQueue.forEach(output -> {
+                                // send text
+                                sendFuture = wsSession.getAsyncRemote().sendText(output);
+                                // wait up-to ws timeout
+                                try {
+                                    sendFuture.get();
+                                } catch (Exception e) {
+                                    log.warn("Send wait interrupted", e);
+                                } finally {
+                                    // remove the sent data from the queue
+                                    outputQueue.remove(output);
+                                }
+                                // update counter
+                                writtenBytes += output.getBytes().length;
+                            });
+                            // release
+                            sendLock.release();
+                        }
+                    } catch (InterruptedException e) {
+                        log.warn("Send interrupted", e);
+                        // release
+                        sendLock.release();
+                    }
+                }
             }
         } else {
             throw new UnsupportedEncodingException("Cannot send a null string");
@@ -133,14 +175,26 @@ public class WebSocketConnection extends AttributeStore {
      * @param buf
      */
     public void send(byte[] buf) {
-        if (log.isTraceEnabled()) {
-            log.trace("send binary: {}", Arrays.toString(buf));
+        if (log.isDebugEnabled()) {
+            log.debug("send binary: {}", Arrays.toString(buf));
         }
         if (wsSession != null) {
-            // send the bytes
-            wsSession.getAsyncRemote().sendBinary(ByteBuffer.wrap(buf));
-            // update counter
-            writtenBytes += buf.length;
+            try {
+                if (sendLock.tryAcquire(100L, TimeUnit.MILLISECONDS)) {
+                    // send the bytes
+                    sendFuture = wsSession.getAsyncRemote().sendBinary(ByteBuffer.wrap(buf));
+                    // wait up-to ws timeout
+                    sendFuture.get();
+                    // update counter
+                    writtenBytes += buf.length;
+                    // release
+                    sendLock.release();
+                }
+            } catch (InterruptedException | ExecutionException e) {
+                log.warn("Send bytes interrupted", e);
+                // release
+                sendLock.release();
+            }
         }
     }
 
@@ -156,6 +210,7 @@ public class WebSocketConnection extends AttributeStore {
             log.trace("send ping: {}", buf);
         }
         if (wsSession != null) {
+            // send the bytes
             wsSession.getBasicRemote().sendPing(ByteBuffer.wrap(buf));
             // update counter
             writtenBytes += buf.length;
@@ -174,6 +229,7 @@ public class WebSocketConnection extends AttributeStore {
             log.trace("send pong: {}", buf);
         }
         if (wsSession != null) {
+            // send the bytes
             wsSession.getBasicRemote().sendPong(ByteBuffer.wrap(buf));
             // update counter
             writtenBytes += buf.length;
@@ -186,7 +242,10 @@ public class WebSocketConnection extends AttributeStore {
     public void close() {
         if (connected.compareAndSet(true, false)) {
             // TODO disconnect from scope etc...
-
+            if (sendFuture != null) {
+                sendFuture.cancel(false);
+            }
+            outputQueue.clear();
             // normal close
             if (wsSession != null) {
                 try {

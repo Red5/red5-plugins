@@ -112,67 +112,72 @@ public class DefaultServerEndpointConfigurator extends ServerEndpointConfig.Conf
         log.debug("Request URI: {}", path);
         // trim websocket protocol etc from the path
         // look for ws:// or wss:// prefixed paths
-        if (path.startsWith("ws")) {
-            path = path.substring(path.indexOf("ws://") + 5);
+        if (path.startsWith("wss")) {
+            path = path.substring(6);
             // now skip to first slash
             path = path.substring(path.indexOf('/'));
-        } else if (path.startsWith("wss")) {
-            path = path.substring(path.indexOf("wss://") + 6);
+        } else if (path.startsWith("ws")) {
+            path = path.substring(5);
             // now skip to first slash
             path = path.substring(path.indexOf('/'));
         }
+        log.debug("Stripped path: {}", path);
         // trim off any non-path endings (like /?id=xxx)
         int idx = -1;
-        if ((idx = path.indexOf("/?")) != -1) {
+        if ((idx = path.lastIndexOf('/')) != -1) {
             path = path.substring(0, idx);
         }
         // get the manager
         WebSocketPlugin plugin = (WebSocketPlugin) PluginRegistry.getPlugin(WebSocketPlugin.NAME);
         WebSocketScopeManager manager = plugin.getManager(path);
-        // add the websocket scope manager to the user props
-        sec.getUserProperties().put(WSConstants.WS_MANAGER, manager);
-        // get the associated scope
-        WebSocketScope scope = manager.getScope(path);
-        log.debug("WebSocketScope: {}", scope);
-        if (scope == null) {
-            // split up the path into usable scope names
-            String[] paths = path.split("\\/");
-            // parent scope
-            IScope appScope = Optional.ofNullable(applicationScope).orElse(plugin.getApplicationScope(path));
-            IScope parentScope = appScope;
-            // room scope
-            IScope roomScope = null;
-            // create child scopes
-            log.debug("Creating child websocket scope of {} for path: {} split: {}", applicationScope, path, Arrays.toString(paths));
-            for (int i = 2; i < paths.length; i++) {
-                // start with the first room and proceed from there
-                roomScope = ScopeUtils.resolveScope(parentScope, paths[i]);
-                // if the room scope doesnt already exist create it
-                if (roomScope == null) {
-                    if (parentScope.createChildScope(paths[i])) {
-                        roomScope = ScopeUtils.resolveScope(parentScope, paths[i]);
+        if (manager != null) {
+            // add the websocket scope manager to the user props
+            sec.getUserProperties().put(WSConstants.WS_MANAGER, manager);
+            // get the associated scope
+            WebSocketScope scope = manager.getScope(path);
+            log.debug("WebSocketScope: {}", scope);
+            if (scope == null) {
+                // split up the path into usable scope names
+                String[] paths = path.split("\\/");
+                // parent scope
+                IScope appScope = Optional.ofNullable(applicationScope).orElse(plugin.getApplicationScope(path));
+                IScope parentScope = appScope;
+                // room scope
+                IScope roomScope = null;
+                // create child scopes
+                log.debug("Creating child websocket scope of {} for path: {} split: {}", applicationScope, path, Arrays.toString(paths));
+                for (int i = 2; i < paths.length; i++) {
+                    // start with the first room and proceed from there
+                    roomScope = ScopeUtils.resolveScope(parentScope, paths[i]);
+                    // if the room scope doesnt already exist create it
+                    if (roomScope == null) {
+                        if (parentScope.createChildScope(paths[i])) {
+                            roomScope = ScopeUtils.resolveScope(parentScope, paths[i]);
+                        }
                     }
+                    log.debug("Parent scope: {} room scope: {}", parentScope, roomScope);
+                    parentScope = roomScope;
                 }
-                log.debug("Parent scope: {} room scope: {}", parentScope, roomScope);
-                parentScope = roomScope;
+                // create and add the websocket scope for the new room scope
+                manager.makeScope(roomScope);
+                // get the new ws scope
+                scope = manager.getScope(path);
+                // copy the listeners from the app websocket scope
+                Set<IWebSocketDataListener> listeners = ((WebSocketScope) appScope.getAttribute(WSConstants.WS_SCOPE)).getListeners();
+                for (IWebSocketDataListener listener : listeners) {
+                    log.debug("Adding listener: {}", listener);
+                    scope.addListener(listener);
+                }
             }
-            // create and add the websocket scope for the new room scope
-            manager.makeScope(roomScope);
-            // get the new ws scope
-            scope = manager.getScope(path);
-            // copy the listeners from the app websocket scope
-            Set<IWebSocketDataListener> listeners = ((WebSocketScope) appScope.getAttribute(WSConstants.WS_SCOPE)).getListeners();
-            for (IWebSocketDataListener listener : listeners) {
-                log.debug("Adding listener: {}", listener);
-                scope.addListener(listener);
-            }
+            // add the websocket scope to the user props
+            sec.getUserProperties().put(WSConstants.WS_SCOPE, scope);
+            // run through any modifiers
+            handshakeModifiers.forEach(modifier -> {
+                modifier.modifyHandshake(request, response);
+            });
+        } else {
+            log.warn("No websocket manager found for path: {} requested uri: {}", path, request.getRequestURI().toString());
         }
-        // add the websocket scope to the user props
-        sec.getUserProperties().put(WSConstants.WS_SCOPE, scope);
-        // run through any modifiers
-        handshakeModifiers.forEach(modifier -> {
-            modifier.modifyHandshake(request, response);
-        });
         super.modifyHandshake(sec, request, response);
     }
 

@@ -7,7 +7,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>red5-plugins-parent</artifactId>
-    <version>1.0.10-M9</version>
+    <version>1.0.10-M11</version>
     <packaging>pom</packaging>
     <name>parent</name>
     <url>https://github.com/Red5/red5-plugins</url>
@@ -106,7 +106,7 @@
             <dependency>
                 <groupId>org.red5</groupId>
                 <artifactId>red5-server</artifactId>
-                <version>${project.parent.version}</version>
+                <version>1.0.10-M8</version>
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
