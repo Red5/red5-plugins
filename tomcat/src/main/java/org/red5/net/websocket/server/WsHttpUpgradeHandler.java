@@ -127,13 +127,13 @@ public class WsHttpUpgradeHandler implements InternalHttpUpgradeHandler {
             endpointConfig.getUserProperties().put(WSConstants.WS_CONNECTION, conn);
             // must be added to the session as well since the session ctor copies from the endpoint and doesnt update
             wsSession.getUserProperties().put(WSConstants.WS_CONNECTION, conn);
+            // set connected flag
+            conn.setConnected();
             // fire endpoint handler
             ep.onOpen(wsSession, endpointConfig);
             webSocketContainer.registerSession(ep, wsSession);
             // add the connection to the manager
             manager.addConnection(conn);
-            // set connected flag
-            conn.setConnected();
         } catch (DeploymentException e) {
             throw new IllegalArgumentException(e);
         } finally {

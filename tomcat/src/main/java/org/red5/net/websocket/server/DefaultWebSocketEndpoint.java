@@ -21,6 +21,7 @@ package org.red5.net.websocket.server;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.Optional;
 
 import javax.websocket.CloseReason;
 import javax.websocket.Endpoint;
@@ -76,9 +77,11 @@ public class DefaultWebSocketEndpoint extends Endpoint {
     @Override
     public void onClose(Session session, CloseReason closeReason) {
         log.trace("Session {} closed", session.getId());
-        // get the connection
-        WebSocketConnection conn = scope.getConnectionBySessionId(session.getId());
+        // get the connection; try scope first then session
+        WebSocketConnection conn = Optional.ofNullable(scope.getConnectionBySessionId(session.getId())).orElse((WebSocketConnection) session.getUserProperties().get(WSConstants.WS_CONNECTION));
         if (conn != null) {
+            // close the ws conn
+            conn.close();
             // remove the connection
             manager.removeConnection(conn);
         } else {

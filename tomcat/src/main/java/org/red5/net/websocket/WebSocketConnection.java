@@ -31,6 +31,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.websocket.Session;
@@ -95,7 +96,7 @@ public class WebSocketConnection extends AttributeStore {
 
     // temporary storage for outgoing text messages
     private ConcurrentLinkedQueue<String> outputQueue = new ConcurrentLinkedQueue<>();
-    
+
     public WebSocketConnection(WebSocketScope scope, Session session) {
         // set our path
         path = scope.getPath();
@@ -131,28 +132,28 @@ public class WebSocketConnection extends AttributeStore {
         log.debug("send message: {}", data);
         // process the incoming string
         if (StringUtils.isNotBlank(data)) {
-            if (wsSession != null) {
+            if (wsSession != null && isConnected()) {
                 // add the data to the queue first
                 outputQueue.add(data);
                 // check for an existing send future and if there is one, return and let it do its work
                 if (sendFuture == null || sendFuture.isDone()) {
                     try {
+                        // acquire lock and drain the queue
                         if (sendLock.tryAcquire(100L, TimeUnit.MILLISECONDS)) {
-                            // we have a lock, so send away; drain the queue
                             outputQueue.forEach(output -> {
-                                // send text
-                                sendFuture = wsSession.getAsyncRemote().sendText(output);
-                                // wait up-to ws timeout
-                                try {
-                                    sendFuture.get();
-                                } catch (Exception e) {
-                                    log.warn("Send wait interrupted", e);
-                                } finally {
-                                    // remove the sent data from the queue
-                                    outputQueue.remove(output);
+                                if (isConnected()) {
+                                    sendFuture = wsSession.getAsyncRemote().sendText(output);
+                                    try {
+                                        sendFuture.get(20000L, TimeUnit.MILLISECONDS);
+                                        writtenBytes += output.getBytes().length;
+                                    } catch (TimeoutException e) {
+                                        log.warn("Send timed out");
+                                    } catch (Exception e) {
+                                        log.warn("Send wait interrupted", e);
+                                    } finally {
+                                        outputQueue.remove(output);
+                                    }
                                 }
-                                // update counter
-                                writtenBytes += output.getBytes().length;
                             });
                             // release
                             sendLock.release();
@@ -178,19 +179,19 @@ public class WebSocketConnection extends AttributeStore {
         if (log.isDebugEnabled()) {
             log.debug("send binary: {}", Arrays.toString(buf));
         }
-        if (wsSession != null) {
+        if (wsSession != null && isConnected()) {
             try {
                 if (sendLock.tryAcquire(100L, TimeUnit.MILLISECONDS)) {
                     // send the bytes
                     sendFuture = wsSession.getAsyncRemote().sendBinary(ByteBuffer.wrap(buf));
                     // wait up-to ws timeout
-                    sendFuture.get();
+                    sendFuture.get(20000L, TimeUnit.MILLISECONDS);
                     // update counter
                     writtenBytes += buf.length;
                     // release
                     sendLock.release();
                 }
-            } catch (InterruptedException | ExecutionException e) {
+            } catch (InterruptedException | ExecutionException | TimeoutException e) {
                 log.warn("Send bytes interrupted", e);
                 // release
                 sendLock.release();
@@ -209,7 +210,7 @@ public class WebSocketConnection extends AttributeStore {
         if (log.isTraceEnabled()) {
             log.trace("send ping: {}", buf);
         }
-        if (wsSession != null) {
+        if (wsSession != null && isConnected()) {
             // send the bytes
             wsSession.getBasicRemote().sendPing(ByteBuffer.wrap(buf));
             // update counter
@@ -228,7 +229,7 @@ public class WebSocketConnection extends AttributeStore {
         if (log.isTraceEnabled()) {
             log.trace("send pong: {}", buf);
         }
-        if (wsSession != null) {
+        if (wsSession != null && isConnected()) {
             // send the bytes
             wsSession.getBasicRemote().sendPong(ByteBuffer.wrap(buf));
             // update counter
@@ -279,7 +280,8 @@ public class WebSocketConnection extends AttributeStore {
      * On connected, set flag.
      */
     public void setConnected() {
-        connected.compareAndSet(false, true);
+        boolean connectSuccess = connected.compareAndSet(false, true);
+        log.warn("Connect success: {}", connectSuccess);
     }
 
     /**
@@ -463,10 +465,13 @@ public class WebSocketConnection extends AttributeStore {
 
     @Override
     public String toString() {
-        if (wsSession != null) {
+        if (wsSession != null && connected.get()) {
             return "WebSocketConnection [wsId=" + wsSession.getId() + ", sessionId=" + wsSession.getHttpSessionId() + ", host=" + host + ", origin=" + origin + ", path=" + path + ", secure=" + isSecure() + ", connected=" + connected + "]";
         }
-        return "WebSocketConnection [wsId=not-set, sessionId=not-set, host=" + host + ", origin=" + origin + ", path=" + path + ", secure=not-set, connected=" + connected + "]";
+        if (wsSession == null) {
+            return "WebSocketConnection [wsId=not-set, sessionId=not-set, host=" + host + ", origin=" + origin + ", path=" + path + ", secure=not-set, connected=" + connected + "]";
+        }
+        return "WebSocketConnection [host=" + host + ", origin=" + origin + ", path=" + path + " connected=false]";
     }
 
 }
