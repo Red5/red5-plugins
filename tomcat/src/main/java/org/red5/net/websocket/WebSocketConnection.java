@@ -26,13 +26,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Stream;
 
 import javax.websocket.Session;
 
@@ -60,6 +63,8 @@ public class WebSocketConnection extends AttributeStore {
     // associated websocket session
     private final WsSession wsSession;
 
+    private String httpSessionId;
+    
     private String host;
 
     private String path;
@@ -78,7 +83,7 @@ public class WebSocketConnection extends AttributeStore {
     /**
      * Contains uri parameters from the initial request.
      */
-    private Map<String, Object> querystringParameters;
+    private ConcurrentMap<String, Object> querystringParameters;
 
     /**
      * Connection protocol (ex. chat, json, etc)
@@ -102,6 +107,8 @@ public class WebSocketConnection extends AttributeStore {
         path = scope.getPath();
         // cast ws session
         this.wsSession = (WsSession) session;
+        // set the local session id
+        httpSessionId = Optional.ofNullable(wsSession.getHttpSessionId()).orElse(wsSession.getId());
         // get extensions
         wsSession.getNegotiatedExtensions().forEach(extension -> {
             if (extensions == null) {
@@ -113,6 +120,16 @@ public class WebSocketConnection extends AttributeStore {
         // get querystring
         String queryString = wsSession.getQueryString();
         log.debug("queryString: {}", queryString);
+        if (StringUtils.isNotBlank(queryString)) {
+            // bust it up by ampersand
+            String[] qsParams = queryString.split("&");
+            // loop-thru adding to the local map
+            querystringParameters = new ConcurrentHashMap<>();
+            Stream.of(qsParams).forEach(qsParam -> {
+                String[] parts = qsParam.split("=");
+                querystringParameters.put(parts[0], parts[1]);
+            });
+        }
         // get request parameters
         Map<String, String> pathParameters = wsSession.getPathParameters();
         log.debug("pathParameters: {}", pathParameters);
@@ -349,12 +366,21 @@ public class WebSocketConnection extends AttributeStore {
     }
 
     /**
+     * Sets / overrides this connections HttpSession id.
+     * 
+     * @param httpSessionId
+     */
+    public void setHttpSessionId(String httpSessionId) {
+        this.httpSessionId = httpSessionId;
+    }
+
+    /**
      * Returns the HttpSession id associated with this connection.
      * 
      * @return sessionId
      */
     public String getHttpSessionId() {
-        return wsSession.getHttpSessionId();
+        return httpSessionId;
     }
 
     /**
@@ -388,7 +414,10 @@ public class WebSocketConnection extends AttributeStore {
     }
 
     public void setQuerystringParameters(Map<String, Object> querystringParameters) {
-        this.querystringParameters = querystringParameters;
+        if (this.querystringParameters == null) {
+            this.querystringParameters = new ConcurrentHashMap<>();
+        }
+        this.querystringParameters.putAll(querystringParameters);
     }
 
     /**
@@ -466,7 +495,7 @@ public class WebSocketConnection extends AttributeStore {
     @Override
     public String toString() {
         if (wsSession != null && connected.get()) {
-            return "WebSocketConnection [wsId=" + wsSession.getId() + ", sessionId=" + wsSession.getHttpSessionId() + ", host=" + host + ", origin=" + origin + ", path=" + path + ", secure=" + isSecure() + ", connected=" + connected + "]";
+            return "WebSocketConnection [wsId=" + wsSession.getId() + ", sessionId=" + httpSessionId + ", host=" + host + ", origin=" + origin + ", path=" + path + ", secure=" + isSecure() + ", connected=" + connected + "]";
         }
         if (wsSession == null) {
             return "WebSocketConnection [wsId=not-set, sessionId=not-set, host=" + host + ", origin=" + origin + ", path=" + path + ", secure=not-set, connected=" + connected + "]";

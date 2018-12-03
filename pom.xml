@@ -7,7 +7,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>red5-plugins-parent</artifactId>
-    <version>1.0.10-M12</version>
+    <version>1.0.10-M14</version>
     <packaging>pom</packaging>
     <name>parent</name>
     <url>https://github.com/Red5/red5-plugins</url>
