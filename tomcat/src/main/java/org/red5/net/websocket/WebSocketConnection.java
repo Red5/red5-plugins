@@ -261,9 +261,17 @@ public class WebSocketConnection extends AttributeStore {
         if (connected.compareAndSet(true, false)) {
             // TODO disconnect from scope etc...
             if (sendFuture != null) {
+                // be nice, dont interrupt
                 sendFuture.cancel(false);
+                try {
+                    // give it a few ticks to complete (using write timeout 20s)
+                    sendFuture.get(20000L, TimeUnit.MILLISECONDS);
+                } catch (Exception e) {
+                    log.warn("Exception at close waiting for send to finish", e);
+                } finally {
+                    outputQueue.clear();
+                }
             }
-            outputQueue.clear();
             // normal close
             if (wsSession != null) {
                 try {
