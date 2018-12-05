@@ -7,7 +7,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>red5-plugins-parent</artifactId>
-    <version>1.0.10-M15</version>
+    <version>1.0.10-M16</version>
     <packaging>pom</packaging>
     <name>parent</name>
     <url>https://github.com/Red5/red5-plugins</url>
@@ -18,7 +18,7 @@
     </organization>
     <modules>
         <module>tomcat</module>
-        <!-- 
+        <!--
         <module>mqtt</module>
         <module>securityplugin</module>
         <module>winstone</module>
@@ -75,7 +75,7 @@
             <id>sonatype-releases</id>
             <name>Sonatype Releases</name>
             <url>http://oss.sonatype.org/content/repositories/releases</url>
-        </repository>    
+        </repository>
         <repository>
             <id>maven2-repository.dev.java.net</id>
             <url>http://download.java.net/maven/2</url>

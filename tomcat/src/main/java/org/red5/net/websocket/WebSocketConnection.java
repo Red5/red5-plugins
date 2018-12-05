@@ -1,14 +1,14 @@
 /*
  * RED5 Open Source Flash Server - https://github.com/red5
- * 
+ *
  * Copyright 2006-2018 by respective authors (see below). All rights reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -49,14 +49,17 @@ import org.slf4j.LoggerFactory;
 /**
  * WebSocketConnection <br>
  * This class represents a WebSocket connection with a client (browser).
- * 
+ *
  * @see https://tools.ietf.org/html/rfc6455
- * 
+ *
  * @author Paul Gregoire
  */
 public class WebSocketConnection extends AttributeStore {
 
     private static final Logger log = LoggerFactory.getLogger(WebSocketConnection.class);
+
+    // Sending async on windows times out
+    private static boolean useAsync = !System.getProperty("os.name").contains("Windows");
 
     private AtomicBoolean connected = new AtomicBoolean(false);
 
@@ -64,7 +67,7 @@ public class WebSocketConnection extends AttributeStore {
     private final WsSession wsSession;
 
     private String httpSessionId;
-    
+
     private String host;
 
     private String path;
@@ -140,7 +143,7 @@ public class WebSocketConnection extends AttributeStore {
 
     /**
      * Sends text to the client.
-     * 
+     *
      * @param data
      *            string / text data
      * @throws UnsupportedEncodingException
@@ -159,9 +162,13 @@ public class WebSocketConnection extends AttributeStore {
                         if (sendLock.tryAcquire(100L, TimeUnit.MILLISECONDS)) {
                             outputQueue.forEach(output -> {
                                 if (isConnected()) {
-                                    sendFuture = wsSession.getAsyncRemote().sendText(output);
                                     try {
-                                        sendFuture.get(20000L, TimeUnit.MILLISECONDS);
+                                        if (useAsync) {
+                                            sendFuture = wsSession.getAsyncRemote().sendText(output);
+                                            sendFuture.get(20000L, TimeUnit.MILLISECONDS);
+                                        } else {
+                                            wsSession.getBasicRemote().sendText(output);
+                                        }
                                         writtenBytes += output.getBytes().length;
                                     } catch (TimeoutException e) {
                                         log.warn("Send timed out");
@@ -189,7 +196,7 @@ public class WebSocketConnection extends AttributeStore {
 
     /**
      * Sends binary data to the client.
-     * 
+     *
      * @param buf
      */
     public void send(byte[] buf) {
@@ -200,15 +207,19 @@ public class WebSocketConnection extends AttributeStore {
             try {
                 if (sendLock.tryAcquire(100L, TimeUnit.MILLISECONDS)) {
                     // send the bytes
-                    sendFuture = wsSession.getAsyncRemote().sendBinary(ByteBuffer.wrap(buf));
-                    // wait up-to ws timeout
-                    sendFuture.get(20000L, TimeUnit.MILLISECONDS);
+                    if (useAsync) {
+                        sendFuture = wsSession.getAsyncRemote().sendBinary(ByteBuffer.wrap(buf));
+                        // wait up-to ws timeout
+                        sendFuture.get(20000L, TimeUnit.MILLISECONDS);
+                    } else {
+                        wsSession.getBasicRemote().sendBinary(ByteBuffer.wrap(buf));
+                    }
                     // update counter
                     writtenBytes += buf.length;
                     // release
                     sendLock.release();
                 }
-            } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            } catch (Exception e) {
                 log.warn("Send bytes interrupted", e);
                 // release
                 sendLock.release();
@@ -218,7 +229,7 @@ public class WebSocketConnection extends AttributeStore {
 
     /**
      * Sends a ping to the client.
-     * 
+     *
      * @param buf
      * @throws IOException
      * @throws IllegalArgumentException
@@ -237,7 +248,7 @@ public class WebSocketConnection extends AttributeStore {
 
     /**
      * Sends a pong back to the client; normally in response to a ping.
-     * 
+     *
      * @param buf
      * @throws IOException
      * @throws IllegalArgumentException
@@ -341,7 +352,7 @@ public class WebSocketConnection extends AttributeStore {
 
     /**
      * Return whether or not the session is secure.
-     * 
+     *
      * @return true if secure and false if unsecure or unconnected
      */
     public boolean isSecure() {
@@ -366,7 +377,7 @@ public class WebSocketConnection extends AttributeStore {
 
     /**
      * Returns the WsSession id associated with this connection.
-     * 
+     *
      * @return sessionId
      */
     public String getSessionId() {
@@ -375,7 +386,7 @@ public class WebSocketConnection extends AttributeStore {
 
     /**
      * Sets / overrides this connections HttpSession id.
-     * 
+     *
      * @param httpSessionId
      */
     public void setHttpSessionId(String httpSessionId) {
@@ -384,7 +395,7 @@ public class WebSocketConnection extends AttributeStore {
 
     /**
      * Returns the HttpSession id associated with this connection.
-     * 
+     *
      * @return sessionId
      */
     public String getHttpSessionId() {
@@ -393,7 +404,7 @@ public class WebSocketConnection extends AttributeStore {
 
     /**
      * Returns the user agent.
-     * 
+     *
      * @return userAgent
      */
     public String getUserAgent() {
@@ -402,7 +413,7 @@ public class WebSocketConnection extends AttributeStore {
 
     /**
      * Sets the incoming headers.
-     * 
+     *
      * @param headers
      */
     public void setHeaders(Map<String, List<String>> headers) {
@@ -430,7 +441,7 @@ public class WebSocketConnection extends AttributeStore {
 
     /**
      * Returns whether or not extensions are enabled on this connection.
-     * 
+     *
      * @return true if extensions are enabled, false otherwise
      */
     public boolean hasExtensions() {
@@ -439,7 +450,7 @@ public class WebSocketConnection extends AttributeStore {
 
     /**
      * Returns enabled extensions.
-     * 
+     *
      * @return extensions
      */
     public Map<String, Object> getExtensions() {
@@ -448,7 +459,7 @@ public class WebSocketConnection extends AttributeStore {
 
     /**
      * Sets the extensions.
-     * 
+     *
      * @param extensions
      */
     public void setExtensions(Map<String, Object> extensions) {
@@ -457,7 +468,7 @@ public class WebSocketConnection extends AttributeStore {
 
     /**
      * Returns the extensions list as a comma separated string as specified by the rfc.
-     * 
+     *
      * @return extension list string or null if no extensions are enabled
      */
     public String getExtensionsAsString() {
@@ -475,7 +486,7 @@ public class WebSocketConnection extends AttributeStore {
 
     /**
      * Returns whether or not a protocol is enabled on this connection.
-     * 
+     *
      * @return true if protocol is enabled, false otherwise
      */
     public boolean hasProtocol() {
@@ -484,7 +495,7 @@ public class WebSocketConnection extends AttributeStore {
 
     /**
      * Returns the protocol enabled on this connection.
-     * 
+     *
      * @return protocol
      */
     public String getProtocol() {
@@ -493,7 +504,7 @@ public class WebSocketConnection extends AttributeStore {
 
     /**
      * Sets the protocol.
-     * 
+     *
      * @param protocol
      */
     public void setProtocol(String protocol) {
