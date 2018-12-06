@@ -57,6 +57,7 @@ import org.apache.catalina.loader.WebappLoader;
 import org.apache.catalina.realm.JAASRealm;
 import org.apache.catalina.realm.NullRealm;
 import org.apache.catalina.realm.RealmBase;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.red5.logging.Red5LoggerFactory;
 import org.red5.server.ContextLoader;
 import org.red5.server.LoaderBase;
@@ -545,6 +546,7 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
                                     }
                                     appctx.start();
                                 } catch (Throwable e) {
+                                		log.error(ExceptionUtils.getStackTrace(e));
                                     throw new RuntimeException("Failed to load webapplication context class", e);
                                 }
                             }
