@@ -175,6 +175,16 @@ Lastly, the websocket filter must be added to each web application that will act
         <dispatcher>FORWARD</dispatcher>
     </filter-mapping>
 ```
+To support subprotocols, add them as a comma-delimited string in the `web.xml`:
+```xml
+    <!-- WebSocket subprotocols -->
+    <context-param>
+        <param-name>subProtocols</param-name>
+        <param-value>chat,json</param-value>
+    </context-param>
+```
+The plugin will default to allowing any requested subprotocol if none are specified.
+
 
 Extending the WebSocket Endpoint
 ---------------------------
@@ -220,7 +230,7 @@ Replace the wsUri variable with your applications path.
 <meta charset="utf-8" />  
 <title>WebSocket Test</title>  
 <script language="javascript" type="text/javascript">  
-var wsUri = "ws://192.168.1.174:10080/myapp/"; 
+var wsUri = "ws://192.168.1.174:5080/myapp/"; 
 var output;  function init() { output = document.getElementById("output"); testWebSocket(); }  function testWebSocket() { websocket = new WebSocket(wsUri); websocket.onopen = function(evt) { onOpen(evt) }; websocket.onclose = function(evt) { onClose(evt) }; websocket.onmessage = function(evt) { onMessage(evt) }; websocket.onerror = function(evt) { onError(evt) }; }  function onOpen(evt) { writeToScreen("CONNECTED"); doSend("WebSocket rocks"); }  function onClose(evt) { writeToScreen("DISCONNECTED"); }  function onMessage(evt) { writeToScreen('<span style="color: blue;">RESPONSE: ' + evt.data+'</span>'); websocket.close(); }  function onError(evt) { writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data); }  function doSend(message) { writeToScreen("SENT: " + message);  websocket.send(message); }  function writeToScreen(message) { var pre = document.createElement("p"); pre.style.wordWrap = "break-word"; pre.innerHTML = message; output.appendChild(pre); }  window.addEventListener("load", init, false);  </script>  <h2>WebSocket Test</h2> <div id="output"></div>
 ```
 

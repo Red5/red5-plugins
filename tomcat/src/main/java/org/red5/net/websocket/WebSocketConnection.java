@@ -29,7 +29,6 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -420,6 +419,11 @@ public class WebSocketConnection extends AttributeStore {
         userAgent = Optional.ofNullable(headers.get(WSConstants.HTTP_HEADER_USERAGENT).get(0)).orElse(headers.get(WSConstants.HTTP_HEADER_USERAGENT.toLowerCase()).get(0));
         host = Optional.ofNullable(headers.get(Constants.HOST_HEADER_NAME).get(0)).orElse(headers.get(Constants.HOST_HEADER_NAME.toLowerCase()).get(0));
         origin = Optional.ofNullable(headers.get(Constants.ORIGIN_HEADER_NAME).get(0)).orElse(headers.get(Constants.ORIGIN_HEADER_NAME.toLowerCase()).get(0));
+        Optional<List<String>> protocolHeader = Optional.ofNullable(headers.get(WSConstants.WS_HEADER_PROTOCOL));
+        if (protocolHeader.isPresent()) {
+            log.debug("Protocol header(s) exist: {}", protocolHeader.get());
+            protocol = protocolHeader.get().get(0);
+        }
         log.debug("Set from headers - user-agent: {} host: {} origin: {}", userAgent, host, origin);
         this.headers = headers;
     }

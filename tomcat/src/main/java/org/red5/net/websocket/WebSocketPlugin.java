@@ -18,7 +18,10 @@
 
 package org.red5.net.websocket;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,6 +29,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Stream;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSessionEvent;
@@ -34,6 +38,7 @@ import javax.websocket.server.ServerContainer;
 import javax.websocket.server.ServerEndpointConfig;
 import javax.websocket.server.ServerEndpointConfig.Configurator;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.tomcat.websocket.server.Constants;
 import org.red5.net.websocket.listener.IWebSocketDataListener;
 import org.red5.net.websocket.server.DefaultServerEndpointConfigurator;
@@ -241,9 +246,9 @@ public class WebSocketPlugin extends Red5Plugin {
         // set a reference to the application scope so we can create room scopes
         String applicationScopeName = path.split("\\/")[1];
         log.debug("Looking for application scope: {}", applicationScopeName);
-        return managerMap.keySet().stream().filter(scope -> (ScopeUtils.isApp(scope) && scope.getName().equals(applicationScopeName))).findFirst().get(); 
+        return managerMap.keySet().stream().filter(scope -> (ScopeUtils.isApp(scope) && scope.getName().equals(applicationScopeName))).findFirst().get();
     }
-    
+
     /**
      * Returns a WebSocketScopeManager for a given scope.
      * 
@@ -375,8 +380,32 @@ public class WebSocketPlugin extends Red5Plugin {
         } else {
             // instance a server container for WS
             container = new DefaultWsServerContainer(servletContext);
+            if (log.isDebugEnabled()) {
+                log.debug("Attributes: {} params: {}", Collections.list(servletContext.getAttributeNames()), Collections.list(servletContext.getInitParameterNames()));
+            }
             // get a configurator instance
             ServerEndpointConfig.Configurator configurator = (ServerEndpointConfig.Configurator) WebSocketPlugin.getWsConfiguratorInstance();
+            // check for sub protocols
+            log.debug("Checking for subprotocols");
+            List<String> subProtocols = new ArrayList<>();
+            Optional<Object> subProtocolsAttr = Optional.ofNullable(servletContext.getInitParameter("subProtocols"));
+            if (subProtocolsAttr.isPresent()) {
+                String attr = (String) subProtocolsAttr.get();
+                log.debug("Subprotocols: {}", attr);
+                if (StringUtils.isNotBlank(attr)) {
+                    if (attr.contains(",")) {
+                        // split them up
+                        Stream.of(attr.split(",")).forEach(entry -> {
+                            subProtocols.add(entry);
+                        });
+                    } else {
+                        subProtocols.add(attr);
+                    }
+                }
+            } else {
+                // default to allowing any subprotocol
+                subProtocols.add("*");
+            }
             log.debug("Checking for CORS");
             // check for allowed origins override in this servlet context
             Optional<Object> crossOpt = Optional.ofNullable(servletContext.getAttribute("crossOriginPolicy"));
@@ -394,7 +423,7 @@ public class WebSocketPlugin extends Red5Plugin {
                 Class<?> endpointClass = Class.forName(wsEndpointClass);
                 log.debug("startWebSocket - endpointPath: {} endpointClass: {}", path, endpointClass);
                 // build an endpoint config
-                ServerEndpointConfig serverEndpointConfig = ServerEndpointConfig.Builder.create(endpointClass, path).configurator(configurator).build();
+                ServerEndpointConfig serverEndpointConfig = ServerEndpointConfig.Builder.create(endpointClass, path).configurator(configurator).subprotocols(subProtocols).build();
                 // set the endpoint on the server container
                 container.addEndpoint(serverEndpointConfig);
             } catch (Throwable t) {

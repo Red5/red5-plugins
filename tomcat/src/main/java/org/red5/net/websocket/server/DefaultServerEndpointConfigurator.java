@@ -36,7 +36,7 @@ public class DefaultServerEndpointConfigurator extends ServerEndpointConfig.Conf
 
     // application scope associated with this endpoint configurator
     private IScope applicationScope = null;
-    
+
     // Cross-origin policy enable/disabled (defaults to the plugin's setting)
     private boolean crossOriginPolicy = WebSocketPlugin.isCrossOriginPolicy();
 
@@ -63,9 +63,14 @@ public class DefaultServerEndpointConfigurator extends ServerEndpointConfig.Conf
     @Override
     public String getNegotiatedSubprotocol(List<String> supported, List<String> requested) {
         log.debug("getNegotiatedSubprotocol - supported: {} requested: {}", supported, requested);
-        for (String request : requested) {
-            if (supported.contains(request)) {
-                return request;
+        if (supported.contains("*")) {
+            // return the first one in the list
+            return requested.get(0);
+        } else {
+            for (String request : requested) {
+                if (supported.contains(request)) {
+                    return request;
+                }
             }
         }
         return "";
@@ -230,5 +235,5 @@ public class DefaultServerEndpointConfigurator extends ServerEndpointConfig.Conf
     public boolean removeHandshakeModifier(HandshakeModifier modifier) {
        return handshakeModifiers.remove(modifier);
     }
-    
+
 }

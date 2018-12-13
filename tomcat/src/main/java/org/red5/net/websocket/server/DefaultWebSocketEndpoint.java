@@ -21,6 +21,7 @@ package org.red5.net.websocket.server;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 import java.util.Optional;
 
 import javax.websocket.CloseReason;
@@ -29,6 +30,7 @@ import javax.websocket.EndpointConfig;
 import javax.websocket.MessageHandler;
 import javax.websocket.Session;
 
+import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.net.websocket.WSConstants;
 import org.red5.net.websocket.WebSocketConnection;
 import org.red5.net.websocket.WebSocketScope;
@@ -48,16 +50,13 @@ public class DefaultWebSocketEndpoint extends Endpoint {
 
     // websocket manager for this path / endpoint
     private WebSocketScopeManager manager;
-    
+
     // websocket scope where connections connect
     private WebSocketScope scope;
-    
+
     /**
-     * TODO: Currently, Tomcat uses an Endpoint instance once - however the java doc of endpoint says: "Each instance of a websocket endpoint is
-     * guaranteed not to be called by more than one thread at a time per active connection." This could mean that after calling onClose(), the
-     * instance could be reused for another connection so onOpen() will get called (possibly from another thread).<br>
-     * If this is the case, we would need a variable holder for the variables that are accessed by the Room thread, and read the reference to the
-     * holder at the beginning of onOpen, onMessage, onClose methods to ensure the room thread always gets the correct instance of the variable holder.
+     * TODO: Currently, Tomcat uses an Endpoint instance once - however the java doc of endpoint says: "Each instance of a websocket endpoint is guaranteed not to be called by more than one thread at a time per active connection." This could mean that after calling onClose(), the instance could be reused for another connection so onOpen() will get called (possibly from another thread).<br>
+     * If this is the case, we would need a variable holder for the variables that are accessed by the Room thread, and read the reference to the holder at the beginning of onOpen, onMessage, onClose methods to ensure the room thread always gets the correct instance of the variable holder.
      */
 
     private ThreadLocal<WebSocketConnection> connectionLocal = new ThreadLocal<>();
@@ -68,6 +67,7 @@ public class DefaultWebSocketEndpoint extends Endpoint {
         // Set maximum messages size to 10,000 bytes
         session.setMaxTextMessageBufferSize(10000);
         session.addMessageHandler(stringHandler);
+        session.addMessageHandler(binaryHandler);
         // get the manager
         manager = (WebSocketScopeManager) config.getUserProperties().get(WSConstants.WS_MANAGER);
         // get ws scope from user props
@@ -132,6 +132,23 @@ public class DefaultWebSocketEndpoint extends Endpoint {
             } catch (UnsupportedEncodingException e) {
                 log.warn("Exception on message", e);
             }
+        }
+
+    };
+
+    private final MessageHandler.Whole<ByteBuffer> binaryHandler = new MessageHandler.Whole<ByteBuffer>() {
+
+        @Override
+        public void onMessage(ByteBuffer message) {
+            if (log.isTraceEnabled()) {
+                log.trace("Message received {}", message);
+            }
+            // create a websocket message and add the current connection for listener access
+            WSMessage wsMessage = new WSMessage();
+            wsMessage.setPayload(IoBuffer.wrap(message));
+            wsMessage.setConnection(connectionLocal.get());
+            // fire the message off to the scope for handling
+            scope.onMessage(wsMessage);
         }
 
     };
