@@ -65,7 +65,7 @@ public class DefaultServerEndpointConfigurator extends ServerEndpointConfig.Conf
         log.debug("getNegotiatedSubprotocol - supported: {} requested: {}", supported, requested);
         if (supported.contains("*")) {
             // return the first one in the list
-            return requested.get(0);
+            return requested.isEmpty() ? "" : requested.get(0);
         } else {
             for (String request : requested) {
                 if (supported.contains(request)) {
