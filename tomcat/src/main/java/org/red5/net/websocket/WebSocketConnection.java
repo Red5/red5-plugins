@@ -170,9 +170,13 @@ public class WebSocketConnection extends AttributeStore {
                                         }
                                         writtenBytes += output.getBytes().length;
                                     } catch (TimeoutException e) {
-                                        log.warn("Send timed out");
+                                        if (log.isDebugEnabled()) {
+                                            log.warn("Send timed out");
+                                        }
                                     } catch (Exception e) {
-                                        log.warn("Send wait interrupted", e);
+                                        if (log.isDebugEnabled()) {
+                                            log.warn("Send wait interrupted", e);
+                                        }
                                     } finally {
                                         outputQueue.remove(output);
                                     }
@@ -277,7 +281,9 @@ public class WebSocketConnection extends AttributeStore {
                     // give it a few ticks to complete (using write timeout 20s)
                     sendFuture.get(20000L, TimeUnit.MILLISECONDS);
                 } catch (Exception e) {
-                    log.warn("Exception at close waiting for send to finish", e);
+                    if (log.isDebugEnabled()) {
+                        log.warn("Exception at close waiting for send to finish", e);
+                    }
                 } finally {
                     outputQueue.clear();
                 }
@@ -316,7 +322,7 @@ public class WebSocketConnection extends AttributeStore {
      */
     public void setConnected() {
         boolean connectSuccess = connected.compareAndSet(false, true);
-        log.warn("Connect success: {}", connectSuccess);
+        log.debug("Connect success: {}", connectSuccess);
     }
 
     /**
