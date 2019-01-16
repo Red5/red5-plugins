@@ -64,8 +64,8 @@ public class UpgradeUtil {
             }
             log.trace("Headers: {}", headers);
         }
-        log.debug("isWebSocketUpgradeRequest: {}", Constants.UPGRADE_HEADER_VALUE.equals(((HttpServletRequest) request).getHeader(Constants.UPGRADE_HEADER_NAME)));
-        return ((request instanceof HttpServletRequest) && (response instanceof HttpServletResponse) && Constants.UPGRADE_HEADER_VALUE.equals(((HttpServletRequest) request).getHeader(Constants.UPGRADE_HEADER_NAME)));
+        log.debug("isWebSocketUpgradeRequest: {}", Constants.UPGRADE_HEADER_VALUE.equalsIgnoreCase(((HttpServletRequest) request).getHeader(Constants.UPGRADE_HEADER_NAME)));
+        return ((request instanceof HttpServletRequest) && (response instanceof HttpServletResponse) && Constants.UPGRADE_HEADER_VALUE.equalsIgnoreCase(((HttpServletRequest) request).getHeader(Constants.UPGRADE_HEADER_NAME)));
     }
 
     public static void doUpgrade(DefaultWsServerContainer sc, HttpServletRequest req, HttpServletResponse resp, ServerEndpointConfig sec, Map<String, String> pathParams) throws ServletException, IOException {
