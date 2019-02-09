@@ -3,11 +3,11 @@
     <parent>
         <groupId>org.red5</groupId>
         <artifactId>red5-parent</artifactId>
-        <version>1.0.10-M8</version>
+        <version>1.0.10</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>red5-plugins-parent</artifactId>
-    <version>1.0.10-M19</version>
+    <version>1.0.10</version>
     <packaging>pom</packaging>
     <name>parent</name>
     <url>https://github.com/Red5/red5-plugins</url>
