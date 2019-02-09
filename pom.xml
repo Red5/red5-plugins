@@ -106,7 +106,7 @@
             <dependency>
                 <groupId>org.red5</groupId>
                 <artifactId>red5-server</artifactId>
-                <version>1.0.10-M8</version>
+                <version>1.0.10-M10</version>
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>

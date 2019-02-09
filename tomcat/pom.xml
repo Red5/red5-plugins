@@ -119,7 +119,7 @@
             <groupId>org.red5</groupId>
             <artifactId>red5-server</artifactId>
             <!-- Because of the circular dep, this must be one-behind the current parent version -->
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
