@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -422,16 +423,30 @@ public class WebSocketConnection extends AttributeStore {
      * @param headers
      */
     public void setHeaders(Map<String, List<String>> headers) {
-        userAgent = Optional.ofNullable(headers.get(WSConstants.HTTP_HEADER_USERAGENT).get(0)).orElse(headers.get(WSConstants.HTTP_HEADER_USERAGENT.toLowerCase()).get(0));
-        host = Optional.ofNullable(headers.get(Constants.HOST_HEADER_NAME).get(0)).orElse(headers.get(Constants.HOST_HEADER_NAME.toLowerCase()).get(0));
-        origin = Optional.ofNullable(headers.get(Constants.ORIGIN_HEADER_NAME).get(0)).orElse(headers.get(Constants.ORIGIN_HEADER_NAME.toLowerCase()).get(0));
-        Optional<List<String>> protocolHeader = Optional.ofNullable(headers.get(WSConstants.WS_HEADER_PROTOCOL));
-        if (protocolHeader.isPresent()) {
-            log.debug("Protocol header(s) exist: {}", protocolHeader.get());
-            protocol = protocolHeader.get().get(0);
+        if (headers != null && !headers.isEmpty()) {
+            // look for both upper and lower case
+            List<String> userAgentHeader = Optional.ofNullable(headers.get(WSConstants.HTTP_HEADER_USERAGENT)).orElse(headers.get(WSConstants.HTTP_HEADER_USERAGENT.toLowerCase()));
+            if (userAgentHeader != null && !userAgentHeader.isEmpty()) {
+                userAgent = userAgentHeader.get(0);
+            }
+            List<String> hostHeader = Optional.ofNullable(headers.get(Constants.HOST_HEADER_NAME)).orElse(headers.get(Constants.HOST_HEADER_NAME.toLowerCase()));
+            if (hostHeader != null && !hostHeader.isEmpty()) {
+                host = hostHeader.get(0);
+            }
+            List<String> originHeader = Optional.ofNullable(headers.get(Constants.ORIGIN_HEADER_NAME)).orElse(headers.get(Constants.ORIGIN_HEADER_NAME.toLowerCase()));
+            if (originHeader != null && !originHeader.isEmpty()) {
+                origin = originHeader.get(0);
+            }
+            Optional<List<String>> protocolHeader = Optional.ofNullable(headers.get(WSConstants.WS_HEADER_PROTOCOL));
+            if (protocolHeader.isPresent()) {
+                log.debug("Protocol header(s) exist: {}", protocolHeader.get());
+                protocol = protocolHeader.get().get(0);
+            }
+            log.debug("Set from headers - user-agent: {} host: {} origin: {}", userAgent, host, origin);
+            this.headers = headers;
+        } else {
+            this.headers = Collections.emptyMap();
         }
-        log.debug("Set from headers - user-agent: {} host: {} origin: {}", userAgent, host, origin);
-        this.headers = headers;
     }
 
     public Map<String, List<String>> getHeaders() {
