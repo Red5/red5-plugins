@@ -72,6 +72,7 @@ public class WebSocketServerTest {
 
     protected static Logger log = LoggerFactory.getLogger(WebSocketServerTest.class);
 
+    @SuppressWarnings("unused")
     private static Object writtenResult;
 
     private static WebSocketScope scope;
@@ -182,6 +183,7 @@ public class WebSocketServerTest {
     //		log.info("-------------------------------------------------------test66 exit");
     //	}
 
+    @SuppressWarnings("unused")
     @Test
     public void testMasked() throws Throwable {
         log.info("testMasked enter");
@@ -199,6 +201,7 @@ public class WebSocketServerTest {
 //        log.info("testMasked exit");
     }
 
+    @SuppressWarnings("unused")
     @Test
     public void testUnmasked() throws Throwable {
         log.info("testUnmasked enter");
@@ -216,6 +219,7 @@ public class WebSocketServerTest {
 //        log.info("testUnmasked exit");
     }
 
+    @SuppressWarnings("unused")
     @Test
     public void testFragmented() throws Throwable {
         log.info("testFragmented enter");
@@ -528,6 +532,7 @@ public class WebSocketServerTest {
 
     }
 
+    @SuppressWarnings("unused")
     private class DummyOutput implements ProtocolDecoderOutput, ProtocolEncoderOutput {
 
         @Override

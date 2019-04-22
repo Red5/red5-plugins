@@ -19,7 +19,6 @@ import javax.websocket.CloseReason;
 import javax.websocket.CloseReason.CloseCodes;
 import javax.websocket.DeploymentException;
 import javax.websocket.Encoder;
-import javax.websocket.Endpoint;
 import javax.websocket.server.ServerContainer;
 import javax.websocket.server.ServerEndpoint;
 import javax.websocket.server.ServerEndpointConfig;
@@ -54,7 +53,7 @@ public class DefaultWsServerContainer extends WsWebSocketContainer implements Se
 
     private final ServletContext servletContext;
 
-    private final Map<String, ServerEndpointConfig> configExactMatchMap = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, ServerEndpointConfig> configExactMatchMap = new ConcurrentHashMap<>();
 
     private final ConcurrentMap<Integer, SortedSet<TemplatePathMatch>> configTemplateMatchMap = new ConcurrentHashMap<>();
 
@@ -257,7 +256,9 @@ public class DefaultWsServerContainer extends WsWebSocketContainer implements Se
      * Overridden to make it visible to other classes in this package.
      */
     @Override
-    protected void registerSession(Endpoint endpoint, WsSession wsSession) {
+    protected void registerSession(Object endpoint, WsSession wsSession) {
+        // Server side uses the endpoint path as the key
+        // Client side uses the client endpoint instance
         super.registerSession(endpoint, wsSession);
         if (wsSession.isOpen() && wsSession.getUserPrincipal() != null && wsSession.getHttpSessionId() != null) {
             registerAuthenticatedSession(wsSession, wsSession.getHttpSessionId());
@@ -271,7 +272,7 @@ public class DefaultWsServerContainer extends WsWebSocketContainer implements Se
      * Overridden to make it visible to other classes in this package.
      */
     @Override
-    protected void unregisterSession(Endpoint endpoint, WsSession wsSession) {
+    protected void unregisterSession(Object endpoint, WsSession wsSession) {
         if (wsSession.getUserPrincipal() != null && wsSession.getHttpSessionId() != null) {
             unregisterAuthenticatedSession(wsSession, wsSession.getHttpSessionId());
         }
