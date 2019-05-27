@@ -22,7 +22,7 @@ import java.io.Serializable;
 import java.security.Principal;
 
 /**
- * Represents a user. <br />
+ * Represents a user. <br>
  * Principals may be associated with a particular <code>Subject</code> to augment it with an additional identity. Authorization decisions can be based upon the Principals associated with a <code>Subject</code>.
  * 
  * @see java.security.Principal
