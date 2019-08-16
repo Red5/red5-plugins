@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Red5 implementation of the WebSocket JSR365 <tt>ServerEndpointConfig.Configurator</tt>.
+ * Red5 implementation of the WebSocket JSR365 ServerEndpointConfig.Configurator.
  * 
  * @author Paul Gregoire
  */
