@@ -116,6 +116,12 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
         }
     }
 
+    private static final String CONFIG_LOCATION_PARAM = "contextConfigLocation";
+
+    private static final String LOCATOR_FACTORY_KEY_PARAM = "locatorFactorySelector";
+
+    private static final String CONTEXT_CLASS_PARAM = "contextClass";
+
     // Initialize Logging
     private static Logger log = Red5LoggerFactory.getLogger(TomcatLoader.class);
 
@@ -224,7 +230,7 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
             ctx.setLoader(wldr);
         }
         log.trace("Context loader (check): {} Context classloader: {}", ctx.getLoader(), ctx.getLoader().getClassLoader());
-        LoaderBase.setRed5ApplicationContext(getHostId() + contextPath, new TomcatApplicationContext(ctx));        
+        LoaderBase.setRed5ApplicationContext(getHostId() + contextPath, new TomcatApplicationContext(ctx));
         return ctx;
     }
 
@@ -406,10 +412,10 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
                         final ClassLoader webClassLoader = cldr.getClassLoader();
                         log.debug("Webapp classloader: {}", webClassLoader);
                         // get the (spring) config file path
-                        final String contextConfigLocation = servletContext.getInitParameter(org.springframework.web.context.ContextLoader.CONFIG_LOCATION_PARAM) == null ? defaultSpringConfigLocation : servletContext.getInitParameter(org.springframework.web.context.ContextLoader.CONFIG_LOCATION_PARAM);
+                        final String contextConfigLocation = servletContext.getInitParameter(CONFIG_LOCATION_PARAM) == null ? defaultSpringConfigLocation : servletContext.getInitParameter(CONFIG_LOCATION_PARAM);
                         log.debug("Spring context config location: {}", contextConfigLocation);
                         // get the (spring) parent context key
-                        final String parentContextKey = servletContext.getInitParameter(org.springframework.web.context.ContextLoader.LOCATOR_FACTORY_KEY_PARAM) == null ? defaultParentContextKey : servletContext.getInitParameter(org.springframework.web.context.ContextLoader.LOCATOR_FACTORY_KEY_PARAM);
+                        final String parentContextKey = servletContext.getInitParameter(LOCATOR_FACTORY_KEY_PARAM) == null ? defaultParentContextKey : servletContext.getInitParameter(LOCATOR_FACTORY_KEY_PARAM);
                         log.debug("Spring parent context key: {}", parentContextKey);
                         // set current threads classloader to the webapp classloader
                         Thread.currentThread().setContextClassLoader(webClassLoader);
@@ -427,12 +433,12 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
                                     log.warn("Parent context was not found: {}", parentContextKey);
                                 }
                                 // create a spring web application context
-                                final String contextClass = servletContext.getInitParameter(org.springframework.web.context.ContextLoader.CONTEXT_CLASS_PARAM) == null ? XmlWebApplicationContext.class.getName() : servletContext.getInitParameter(org.springframework.web.context.ContextLoader.CONTEXT_CLASS_PARAM);
+                                final String contextClass = servletContext.getInitParameter(CONTEXT_CLASS_PARAM) == null ? XmlWebApplicationContext.class.getName() : servletContext.getInitParameter(CONTEXT_CLASS_PARAM);
                                 // web app context (spring)
                                 ConfigurableWebApplicationContext appctx = null;
                                 try {
                                     Class<?> clazz = Class.forName(contextClass, true, webClassLoader);
-                                    appctx = (ConfigurableWebApplicationContext) clazz.newInstance();
+                                    appctx = (ConfigurableWebApplicationContext) clazz.getDeclaredConstructor().newInstance();
                                     // set the root webapp ctx attr on the each servlet context so spring can find it later
                                     servletContext.setAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, appctx);
                                     appctx.setConfigLocations(new String[] { contextConfigLocation });

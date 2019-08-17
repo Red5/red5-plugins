@@ -127,13 +127,13 @@ public class WebSocketPlugin extends Red5Plugin {
         server.getGlobalScopes().forEachRemaining(gscope -> {
             log.info("Got global scope: {}", gscope.getName());
             // setup stream aware handlers
-                gscope.getBasicScopeNames(ScopeType.APPLICATION).forEach(appName -> {
-                    log.debug("Setting up websocket for {}", appName);
-                    IScope appScope = (IScope) gscope.getBasicScope(ScopeType.APPLICATION, appName);
-                    log.debug("Configuring application scope: {}", appScope);
-                    configureApplicationScopeWebSocket(appScope);
-                });
+            gscope.getBasicScopeNames(ScopeType.APPLICATION).forEach(appName -> {
+                log.debug("Setting up websocket for {}", appName);
+                IScope appScope = (IScope) gscope.getBasicScope(ScopeType.APPLICATION, appName);
+                log.debug("Configuring application scope: {}", appScope);
+                configureApplicationScopeWebSocket(appScope);
             });
+        });
     }
 
     /** {@inheritDoc} */
