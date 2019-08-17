@@ -207,7 +207,6 @@ public final class WarDeployer implements InitializingBean, DisposableBean {
      * 
      * @return LoadeerMBean
      */
-    @SuppressWarnings("cast")
     public LoaderMXBean getLoader() {
         LoaderMXBean loader = null;
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();

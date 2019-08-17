@@ -90,7 +90,6 @@ public class TomcatVHostLoader extends TomcatLoader implements TomcatVHostLoader
      * 
      * @throws ServletException
      */
-    @SuppressWarnings("cast")
     @Override
     public void start() throws ServletException {
         log.info("Loading tomcat virtual host");
@@ -263,7 +262,6 @@ public class TomcatVHostLoader extends TomcatLoader implements TomcatVHostLoader
      * @return true on success
      * @throws ServletException
      */
-    @SuppressWarnings("cast")
     public boolean startWebApplication(String applicationName) throws ServletException {
         boolean result = false;
         log.info("Starting Tomcat virtual host - Web application");
