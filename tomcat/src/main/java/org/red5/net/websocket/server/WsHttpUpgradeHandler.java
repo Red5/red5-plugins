@@ -173,10 +173,10 @@ public class WsHttpUpgradeHandler implements InternalHttpUpgradeHandler {
                 String msg = sm.getString("wsHttpUpgradeHandler.closeOnError");
                 wsSession.doClose(new CloseReason(CloseCodes.GOING_AWAY, msg), new CloseReason(CloseCodes.CLOSED_ABNORMALLY, msg));
                 //$FALL-THROUGH$
+            case CONNECT_FAIL:
             case DISCONNECT:
             case TIMEOUT:
                 return SocketState.CLOSED;
-
         }
         if (wsFrame.isOpen()) {
             return SocketState.UPGRADED;
@@ -215,9 +215,9 @@ public class WsHttpUpgradeHandler implements InternalHttpUpgradeHandler {
 
     private void close(CloseReason cr) {
         /*
-         * Any call to this method is a result of a problem reading from the client. At this point that state of the connection is unknown.
-         * Attempt to send a close frame to the client and then close the socket immediately. There is no point in waiting for a close frame from the
-         * client because there is no guarantee that we can recover from whatever messed up state the client put the connection into.
+         * Any call to this method is a result of a problem reading from the client. At this point that state of the connection is unknown. Attempt to send a close frame to the client and
+         * then close the socket immediately. There is no point in waiting for a close frame from the client because there is no guarantee that we can recover from whatever messed up state
+         * the client put the connection into.
          */
         wsSession.onClose(cr);
     }
@@ -225,6 +225,17 @@ public class WsHttpUpgradeHandler implements InternalHttpUpgradeHandler {
     @Override
     public void setSslSupport(SSLSupport sslSupport) {
         // NO-OP. WebSocket has no requirement to access the TLS information associated with the underlying connection.
+    }
+
+    /**
+     * Check to see if the timeout has expired and process a timeout if that is that case. Note: The name of this method originated with the Servlet 3.0 asynchronous processing but evolved over time to represent a timeout that is triggered independently of the socket read/write timeouts.
+     * 
+     * @param now
+     *            - The time (as returned by System.currentTimeMillis() to use as the current time to determine whether the timeout has expired. If negative, the timeout will always be treated as if it has expired.
+     */
+    @Override
+    public void timeoutAsync(long now) {
+        log.debug("timeoutAsync: {}", now);
     }
 
 }

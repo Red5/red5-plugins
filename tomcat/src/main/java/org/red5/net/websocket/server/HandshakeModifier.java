@@ -16,7 +16,7 @@ public class HandshakeModifier {
      * @param request
      * @param response
      */
-    public void modifyHandshake(HandshakeRequest request, HandshakeResponse response) {        
+    public void modifyHandshake(HandshakeRequest request, HandshakeResponse response) {
     }
 
 }

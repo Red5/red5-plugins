@@ -54,11 +54,15 @@ public class WsFilter implements Filter {
         }
         // if we need the spring / app context
         ApplicationContext appCtx = (ApplicationContext) request.getServletContext().getAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
-        // use one level higher than MultithreadedAppAdapter since we only need the scope
-        StatefulScopeWrappingAdapter app = (StatefulScopeWrappingAdapter) appCtx.getBean("web.handler");
-        // applications scope
-        IScope appScope = app.getScope();
-        log.debug("Application scope: {} ws scope: {}", appScope.getName(), appScope.getAttribute(WSConstants.WS_SCOPE));
+        if (appCtx != null) {
+            // use one level higher than MultithreadedAppAdapter since we only need the scope
+            StatefulScopeWrappingAdapter app = (StatefulScopeWrappingAdapter) appCtx.getBean("web.handler");
+            // applications scope
+            IScope appScope = app.getScope();
+            log.debug("Application scope: {} ws scope: {}", appScope.getName(), appScope.getAttribute(WSConstants.WS_SCOPE));
+        } else {
+            log.warn("Application context was not found in the servlet context for {}", contextPath);
+        }
         // HTTP request with an upgrade header for WebSocket present
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse resp = (HttpServletResponse) response;
@@ -67,14 +71,6 @@ public class WsFilter implements Filter {
         String queryString = req.getQueryString();
         String pathInfo = req.getPathInfo();
         log.debug("Request uri: {} path info: {} query string: {}", requestUri, pathInfo, queryString);
-//        String path;
-//        if (pathInfo == null) {
-//            path = req.getServletPath();
-//        } else {
-//            path = req.getServletPath() + pathInfo;
-//        }
-        //WsMappingResult mappingResult = sc.findMapping(path);
-        //log.debug("WsMappingResult: {} for path: {}", mappingResult, path);
         WsMappingResult mappingResult = sc.findMapping(contextPath);
         log.debug("WsMappingResult: {} for contextPath: {}", mappingResult, contextPath);
         if (mappingResult == null) {

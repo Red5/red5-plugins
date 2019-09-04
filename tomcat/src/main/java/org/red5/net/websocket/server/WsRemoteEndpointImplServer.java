@@ -154,9 +154,8 @@ public class WsRemoteEndpointImplServer extends WsRemoteEndpointImplBase {
     }
 
     /*
-     * Currently this is only called from the background thread so we could just call clearHandler() with useDispatch == false but the method parameter
-     * was added in case other callers started to use this method to make sure that those callers think through what the correct value of useDispatch is
-     * for them.
+     * Currently this is only called from the background thread so we could just call clearHandler() with useDispatch == false but the method parameter was added in case other callers
+     * started to use this method to make sure that those callers think through what the correct value of useDispatch is for them.
      */
     protected void onTimeout(boolean useDispatch) {
         if (handler != null) {

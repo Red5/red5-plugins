@@ -21,7 +21,7 @@ public class WsContextListener implements ServletContextListener {
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
-        log.debug("contextDestroyed - sce: {}", sce);        
+        log.debug("contextDestroyed - sce: {}", sce);
     }
 
 }

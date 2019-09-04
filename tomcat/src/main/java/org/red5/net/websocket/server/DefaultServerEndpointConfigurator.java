@@ -45,7 +45,7 @@ public class DefaultServerEndpointConfigurator extends ServerEndpointConfig.Conf
 
     // holds handshake modification implementations
     private CopyOnWriteArraySet<HandshakeModifier> handshakeModifiers = new CopyOnWriteArraySet<>();
-    
+
     @Override
     public <T> T getEndpointInstance(Class<T> clazz) throws InstantiationException {
         log.debug("getEndpointInstance: {}", clazz.getName());
@@ -223,7 +223,7 @@ public class DefaultServerEndpointConfigurator extends ServerEndpointConfig.Conf
      * @return true if added and false otherwise
      */
     public boolean addHandshakeModifier(HandshakeModifier modifier) {
-       return handshakeModifiers.add(modifier);
+        return handshakeModifiers.add(modifier);
     }
 
     /**
@@ -233,7 +233,7 @@ public class DefaultServerEndpointConfigurator extends ServerEndpointConfig.Conf
      * @return true if removed and false otherwise
      */
     public boolean removeHandshakeModifier(HandshakeModifier modifier) {
-       return handshakeModifiers.remove(modifier);
+        return handshakeModifiers.remove(modifier);
     }
 
 }
