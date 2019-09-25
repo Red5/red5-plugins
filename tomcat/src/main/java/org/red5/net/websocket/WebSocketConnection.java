@@ -75,7 +75,7 @@ public class WebSocketConnection extends AttributeStore {
     /**
      * Contains uri parameters from the initial request.
      */
-    private ConcurrentMap<String, Object> querystringParameters;
+    private Map<String, Object> querystringParameters;
 
     /**
      * Connection protocol (ex. chat, json, etc)
@@ -116,10 +116,14 @@ public class WebSocketConnection extends AttributeStore {
             // bust it up by ampersand
             String[] qsParams = queryString.split("&");
             // loop-thru adding to the local map
-            querystringParameters = new ConcurrentHashMap<>();
+            querystringParameters = new HashMap<>();
             Stream.of(qsParams).forEach(qsParam -> {
                 String[] parts = qsParam.split("=");
-                querystringParameters.put(parts[0], parts[1]);
+                if (parts.length == 2) {
+                    querystringParameters.put(parts[0], parts[1]);
+                } else {
+                    querystringParameters.put(parts[0], null);
+                }
             });
         }
         // get request parameters
