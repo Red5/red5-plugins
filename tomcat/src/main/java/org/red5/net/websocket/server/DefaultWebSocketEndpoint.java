@@ -17,6 +17,7 @@ import javax.websocket.CloseReason;
 import javax.websocket.Endpoint;
 import javax.websocket.EndpointConfig;
 import javax.websocket.MessageHandler;
+import javax.websocket.PongMessage;
 import javax.websocket.Session;
 
 import org.apache.mina.core.buffer.IoBuffer;
@@ -44,8 +45,11 @@ public class DefaultWebSocketEndpoint extends Endpoint {
     private WebSocketScope scope;
 
     /**
-     * TODO: Currently, Tomcat uses an Endpoint instance once - however the java doc of endpoint says: "Each instance of a websocket endpoint is guaranteed not to be called by more than one thread at a time per active connection." This could mean that after calling onClose(), the instance could be reused for another connection so onOpen() will get called (possibly from another thread).<br>
-     * If this is the case, we would need a variable holder for the variables that are accessed by the Room thread, and read the reference to the holder at the beginning of onOpen, onMessage, onClose methods to ensure the room thread always gets the correct instance of the variable holder.
+     * TODO: Currently, Tomcat uses an Endpoint instance once - however the java doc of endpoint says: "Each instance of a websocket endpoint is guaranteed not to be called by more
+     * than one thread at a time per active connection." This could mean that after calling onClose(), the instance could be reused for another connection so onOpen() will get
+     * called (possibly from another thread).<br>
+     * If this is the case, we would need a variable holder for the variables that are accessed by the Room thread, and read the reference to the holder at the beginning of onOpen,
+     * onMessage, onClose methods to ensure the room thread always gets the correct instance of the variable holder.
      */
 
     private ThreadLocal<WebSocketConnection> connectionLocal = new ThreadLocal<>();
@@ -57,6 +61,7 @@ public class DefaultWebSocketEndpoint extends Endpoint {
         session.setMaxTextMessageBufferSize(10000);
         session.addMessageHandler(stringHandler);
         session.addMessageHandler(binaryHandler);
+        session.addMessageHandler(pongHandler);
         // get the manager
         manager = (WebSocketScopeManager) config.getUserProperties().get(WSConstants.WS_MANAGER);
         // get ws scope from user props
@@ -90,10 +95,17 @@ public class DefaultWebSocketEndpoint extends Endpoint {
         }
         if (root instanceof EOFException) {
             // Assume this is triggered by the user closing their browser and ignore it.
+            if (log.isDebugEnabled()) {
+                log.warn("EOF exception", root);
+            }
         } else if (!session.isOpen() && root instanceof IOException) {
             // IOException after close. Assume this is a variation of the user closing their browser (or refreshing very quickly) and ignore it.
+            if (log.isDebugEnabled()) {
+                log.warn("IO exception when not opened", root);
+            }
         } else {
             log.warn("onError: {}", t.toString(), t);
+            onClose(session, new CloseReason(CloseReason.CloseCodes.CLOSED_ABNORMALLY, t.getMessage()));
         }
     }
 
@@ -112,10 +124,13 @@ public class DefaultWebSocketEndpoint extends Endpoint {
             if (log.isTraceEnabled()) {
                 log.trace("Message received {}", message);
             }
+            final WebSocketConnection conn = connectionLocal.get();
             try {
+                // update the byte received counter
+                conn.updateReadBytes(message.getBytes().length);
                 // create a websocket message and add the current connection for listener access
                 WSMessage wsMessage = new WSMessage(message);
-                wsMessage.setConnection(connectionLocal.get());
+                wsMessage.setConnection(conn);
                 // fire the message off to the scope for handling
                 scope.onMessage(wsMessage);
             } catch (UnsupportedEncodingException e) {
@@ -132,12 +147,28 @@ public class DefaultWebSocketEndpoint extends Endpoint {
             if (log.isTraceEnabled()) {
                 log.trace("Message received {}", message);
             }
+            final WebSocketConnection conn = connectionLocal.get();
+            // update the byte received counter
+            conn.updateReadBytes(message.limit());
             // create a websocket message and add the current connection for listener access
             WSMessage wsMessage = new WSMessage();
             wsMessage.setPayload(IoBuffer.wrap(message));
-            wsMessage.setConnection(connectionLocal.get());
+            wsMessage.setConnection(conn);
             // fire the message off to the scope for handling
             scope.onMessage(wsMessage);
+        }
+
+    };
+
+    private final MessageHandler.Whole<PongMessage> pongHandler = new MessageHandler.Whole<PongMessage>() {
+
+        @Override
+        public void onMessage(PongMessage message) {
+            if (log.isTraceEnabled()) {
+                log.trace("Pong received {}", message);
+            }
+            // update the byte received counter
+            connectionLocal.get().updateReadBytes(1);
         }
 
     };

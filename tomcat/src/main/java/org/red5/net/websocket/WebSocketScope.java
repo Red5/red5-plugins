@@ -245,11 +245,6 @@ public class WebSocketScope implements InitializingBean, DisposableBean {
      */
     public void onMessage(WSMessage message) {
         log.trace("Listeners: {}", listeners.size());
-        // update read bytes counter
-        Optional<WebSocketConnection> opt = Optional.ofNullable(message.getConnection());
-        if (opt.isPresent()) {
-            opt.get().updateReadBytes(message.getPayload().remaining());
-        }
         listeners.forEach(listener -> {
             try {
                 listener.onWSMessage(message);

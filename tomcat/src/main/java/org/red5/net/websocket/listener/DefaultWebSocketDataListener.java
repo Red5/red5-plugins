@@ -7,6 +7,7 @@
 
 package org.red5.net.websocket.listener;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Set;
 
@@ -57,6 +58,8 @@ public class DefaultWebSocketDataListener extends WebSocketDataListener {
                     conn.send(msg);
                 } catch (UnsupportedEncodingException e) {
                     log.warn("Encoding issue with the message data: {}", message, e);
+                } catch (IOException e) {
+                    log.warn("IO exception", e);
                 }
             }
         } else {

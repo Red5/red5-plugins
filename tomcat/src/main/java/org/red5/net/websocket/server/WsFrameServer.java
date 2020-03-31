@@ -43,13 +43,16 @@ public class WsFrameServer extends WsFrameBase {
         if (log.isDebugEnabled()) {
             log.debug("wsFrameServer.onDataAvailable");
         }
+        // set connection local to the message handler so WSMessage will contain the connection
+        ((DefaultWebSocketEndpoint) wsSession.getLocal()).setConnectionLocal((WebSocketConnection) wsSession.getUserProperties().get(WSConstants.WS_CONNECTION));
+        // handle input
         if (isOpen() && inputBuffer.hasRemaining() && !isSuspended()) {
             // There might be a data that was left in the buffer when
             // the read has been suspended.
             // Consume this data before reading from the socket.
             processInputBuffer();
         }
-
+        // handle anything else
         while (isOpen() && !isSuspended()) {
             // Fill up the input buffer with as much data as we can
             inputBuffer.mark();
@@ -66,6 +69,8 @@ public class WsFrameServer extends WsFrameBase {
             }
             processInputBuffer();
         }
+        // clear thread local
+        ((DefaultWebSocketEndpoint) wsSession.getLocal()).setConnectionLocal(null);
     }
 
     @Override
@@ -96,13 +101,9 @@ public class WsFrameServer extends WsFrameBase {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(applicationClassLoader);
-            // set connection local to the message handler so WSMessage will contain the connection
-            ((DefaultWebSocketEndpoint) wsSession.getLocal()).setConnectionLocal((WebSocketConnection) wsSession.getUserProperties().get(WSConstants.WS_CONNECTION));
             // super!
             super.sendMessageText(last);
         } finally {
-            // clear thread local
-            ((DefaultWebSocketEndpoint) wsSession.getLocal()).setConnectionLocal(null);
             Thread.currentThread().setContextClassLoader(cl);
         }
     }
@@ -112,13 +113,9 @@ public class WsFrameServer extends WsFrameBase {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(applicationClassLoader);
-            // set connection local to the message handler so WSMessage will contain the connection
-            ((DefaultWebSocketEndpoint) wsSession.getLocal()).setConnectionLocal((WebSocketConnection) wsSession.getUserProperties().get(WSConstants.WS_CONNECTION));
             // super!
             super.sendMessageBinary(msg, last);
         } finally {
-            // clear thread local
-            ((DefaultWebSocketEndpoint) wsSession.getLocal()).setConnectionLocal(null);
             Thread.currentThread().setContextClassLoader(cl);
         }
     }
