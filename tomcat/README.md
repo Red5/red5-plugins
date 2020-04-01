@@ -19,10 +19,13 @@ The first step is to identify and special configuration in-place within your exi
 
 The IP addresses and ports identified for `ws` and `wss` in the `conf/jee-container.xml` file are no longer used. The `http` and `https` configuration in the Tomcat bean are used instead since this version of the WebSocket plugin is integrated with Tomcat itself. 
 
+### Building for JDK8
+
+Use this command to build for JDK8 since we are currently moving over to JDK11 builds: `mvn clean install -Djava.release.level=8 -Dmaven.compiler.source=1.8 -Dmaven.compiler.target=1.8`
 
 ## Tomcat Server
 
-Development is based on version 8.5.35 of Tomcat.
+Development is based on version 8.5.x of Tomcat.
 
 
 ## WebSocket
