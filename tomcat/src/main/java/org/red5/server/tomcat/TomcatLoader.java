@@ -208,15 +208,14 @@ public class TomcatLoader extends LoaderBase implements InitializingBean, Dispos
         }
         // grab the current classloader
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        // this is the expected / proper way to add the class loader
         ctx.setParentClassLoader(classLoader);
         // get the associated loader for the context
         Object ldr = ctx.getLoader();
         log.trace("Context loader (null if the context has not been started): {}", ldr);
         if (ldr == null) {
-            // create a loader
-            WebappLoader wldr = new WebappLoader(classLoader);
-            // add the Loader to the context
-            ctx.setLoader(wldr);
+            // create a webapp loader and set it on the context
+            ctx.setLoader(new WebappLoader());
         }
         log.trace("Context loader (check): {} Context classloader: {}", ctx.getLoader(), ctx.getLoader().getClassLoader());
         LoaderBase.setRed5ApplicationContext(getHostId() + contextPath, new TomcatApplicationContext(ctx));
