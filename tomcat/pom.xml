@@ -19,11 +19,11 @@
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <compilerVersion>1.7</compilerVersion>
                     <fork>true</fork>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                     <executable>${maven.compiler.executable}</executable>
+                    <compilerVersion>1.8</compilerVersion>
                 </configuration>
             </plugin>
             <plugin>
