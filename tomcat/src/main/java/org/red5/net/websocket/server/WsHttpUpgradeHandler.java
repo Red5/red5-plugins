@@ -14,6 +14,7 @@ import javax.websocket.EndpointConfig;
 import javax.websocket.Extension;
 
 import org.apache.coyote.http11.upgrade.InternalHttpUpgradeHandler;
+import org.apache.coyote.http11.upgrade.UpgradeInfo;
 import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
 import org.apache.tomcat.util.net.SSLSupport;
 import org.apache.tomcat.util.net.SocketEvent;
@@ -41,6 +42,9 @@ public class WsHttpUpgradeHandler implements InternalHttpUpgradeHandler {
     private final ClassLoader applicationClassLoader;
 
     private SocketWrapperBase<?> socketWrapper;
+
+    // added at tc 8.5.61
+    private UpgradeInfo upgradeInfo = new UpgradeInfo();
 
     private Endpoint ep;
 
@@ -106,9 +110,9 @@ public class WsHttpUpgradeHandler implements InternalHttpUpgradeHandler {
         t.setContextClassLoader(applicationClassLoader);
         try {
             // instance a remote endpoint server
-            wsRemoteEndpointServer = new WsRemoteEndpointImplServer(socketWrapper);
+            wsRemoteEndpointServer = new WsRemoteEndpointImplServer(socketWrapper, upgradeInfo);
             wsSession = new WsSession(ep, wsRemoteEndpointServer, webSocketContainer, handshakeRequest.getRequestURI(), handshakeRequest.getParameterMap(), handshakeRequest.getQueryString(), handshakeRequest.getUserPrincipal(), httpSessionId, negotiatedExtensions, subProtocol, pathParameters, secure, endpointConfig);
-            wsFrame = new WsFrameServer(socketWrapper, wsSession, transformation, applicationClassLoader);
+            wsFrame = new WsFrameServer(socketWrapper, upgradeInfo, wsSession, transformation, applicationClassLoader);
             // WsFrame adds the necessary final transformations. Copy the completed transformation chain to the remote end point.
             wsRemoteEndpointServer.setTransformation(wsFrame.getTransformation());
             // get the ws scope manager from user props
@@ -188,6 +192,11 @@ public class WsHttpUpgradeHandler implements InternalHttpUpgradeHandler {
     @Override
     public void pause() {
         // NO-OP
+    }
+
+    @Override
+    public UpgradeInfo getUpgradeInfo() {
+        return upgradeInfo;
     }
 
     @Override

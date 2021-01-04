@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
  * WebSocketConnection <br>
  * This class represents a WebSocket connection with a client (browser).
  *
- * @see https://tools.ietf.org/html/rfc6455
+ * @see <a href="https://tools.ietf.org/html/rfc6455">rfc6455</a>
  *
  * @author Paul Gregoire
  */

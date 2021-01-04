@@ -4,6 +4,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import org.apache.coyote.http11.upgrade.UpgradeInfo;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
@@ -25,11 +26,14 @@ public class WsFrameServer extends WsFrameBase {
 
     private final SocketWrapperBase<?> socketWrapper;
 
+    private final UpgradeInfo upgradeInfo;
+
     private final ClassLoader applicationClassLoader;
 
-    public WsFrameServer(SocketWrapperBase<?> socketWrapper, WsSession wsSession, Transformation transformation, ClassLoader applicationClassLoader) {
+    public WsFrameServer(SocketWrapperBase<?> socketWrapper, UpgradeInfo upgradeInfo, WsSession wsSession, Transformation transformation, ClassLoader applicationClassLoader) {
         super(wsSession, transformation);
         this.socketWrapper = socketWrapper;
+        this.upgradeInfo = upgradeInfo;
         this.applicationClassLoader = applicationClassLoader;
     }
 
@@ -71,6 +75,12 @@ public class WsFrameServer extends WsFrameBase {
         }
         // clear thread local
         ((DefaultWebSocketEndpoint) wsSession.getLocal()).setConnectionLocal(null);
+    }
+
+    @Override
+    protected void updateStats(long payloadLength) {
+        upgradeInfo.addMsgsReceived(1);
+        upgradeInfo.addBytesReceived(payloadLength);
     }
 
     @Override

@@ -9,6 +9,7 @@ import java.util.concurrent.Executor;
 import javax.websocket.SendHandler;
 import javax.websocket.SendResult;
 
+import org.apache.coyote.http11.upgrade.UpgradeInfo;
 import org.apache.tomcat.util.net.AbstractEndpoint;
 import org.apache.tomcat.util.net.SocketWrapperBase;
 import org.apache.tomcat.util.res.StringManager;
@@ -28,6 +29,8 @@ public class WsRemoteEndpointImplServer extends WsRemoteEndpointImplBase {
 
     private final SocketWrapperBase<?> socketWrapper;
 
+    private final UpgradeInfo upgradeInfo;
+
     private final WsWriteTimeout wsWriteTimeout;
 
     private volatile SendHandler handler;
@@ -38,8 +41,10 @@ public class WsRemoteEndpointImplServer extends WsRemoteEndpointImplBase {
 
     private volatile boolean close;
 
-    public WsRemoteEndpointImplServer(SocketWrapperBase<?> socketWrapper) {
+    public WsRemoteEndpointImplServer(SocketWrapperBase<?> socketWrapper, UpgradeInfo upgradeInfo) {
         this.socketWrapper = socketWrapper;
+        this.upgradeInfo = upgradeInfo;
+        // Paul: our impl doesnt use the WsServerContainer.wsWriteTimeout due to its type and what may be registered, we use our impl classes
         this.wsWriteTimeout = new WsWriteTimeout();
     }
 
@@ -82,6 +87,12 @@ public class WsRemoteEndpointImplServer extends WsRemoteEndpointImplBase {
                 handler.onResult(sr);
             }
         }
+    }
+
+    @Override
+    protected void updateStats(long payloadLength) {
+        upgradeInfo.addMsgsSent(1);
+        upgradeInfo.addBytesSent(payloadLength);
     }
 
     public void onWritePossible(boolean useDispatch) {

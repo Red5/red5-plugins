@@ -10,7 +10,7 @@
     <artifactId>tomcatplugin</artifactId>
     <packaging>jar</packaging>
     <name>tomcatplugin</name>
-    <version>2.2.4</version>
+    <version>2.2.6</version>
     <url>https://github.com/Red5/red5-plugins/tree/master/tomcat</url>
     <description>Tomcat web and websocket container plugin</description>
     <properties>
@@ -20,7 +20,7 @@
         <java.release.level>8</java.release.level>
         <tyrus.version>1.15</tyrus.version>
         <!-- Local to plugin version of tomcat https://tomcat.apache.org/download-80.cgi -->
-        <tomcat-local.version>8.5.57</tomcat-local.version>
+        <tomcat-local.version>8.5.61</tomcat-local.version>
     </properties>
     <build>
         <defaultGoal>install</defaultGoal>
@@ -58,6 +58,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.0</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -67,6 +68,9 @@
                             <Red5-Plugin-Main-Class>org.red5.net.websocket.WebSocketPlugin</Red5-Plugin-Main-Class>
                         </manifestEntries>
                     </archive>
+                    <excludes>
+                        <exclude>**/jee-container.xml</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
             <plugin>

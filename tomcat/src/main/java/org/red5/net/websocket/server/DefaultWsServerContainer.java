@@ -89,7 +89,7 @@ public class DefaultWsServerContainer extends WsWebSocketContainer implements Se
     }
 
     /**
-     * Published the provided endpoint implementation at the specified path with the specified configuration. {@link #WsServerContainer(ServletContext)}
+     * Published the provided endpoint implementation at the specified path with the specified configuration. {@link #org.apache.tomcat.websocket.server.WsServerContainer(ServletContext)}
      * must be called before calling this method.
      *
      * @param sec
