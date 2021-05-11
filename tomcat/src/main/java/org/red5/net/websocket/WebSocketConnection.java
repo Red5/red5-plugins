@@ -17,9 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Future;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -46,6 +44,10 @@ import org.slf4j.LoggerFactory;
 public class WebSocketConnection extends AttributeStore {
 
     private static final Logger log = LoggerFactory.getLogger(WebSocketConnection.class);
+
+    private static final boolean isTrace = log.isTraceEnabled();
+
+    private static final boolean isDebug = log.isDebugEnabled();
 
     // Sending async on windows times out
     private static boolean useAsync = !System.getProperty("os.name").contains("Windows");
@@ -92,15 +94,6 @@ public class WebSocketConnection extends AttributeStore {
 
     private final static AtomicLongFieldUpdater<WebSocketConnection> writeUpdater = AtomicLongFieldUpdater.newUpdater(WebSocketConnection.class, "writtenBytes");
 
-    // protect against mulitiple threads attempting to send at once
-    private Semaphore sendLock = new Semaphore(1, true);
-
-    // future used for sending to prevent concurrent write exceptions
-    private Future<Void> sendFuture;
-
-    // temporary storage for outgoing text messages
-    private ConcurrentLinkedQueue<String> outputQueue = new ConcurrentLinkedQueue<>();
-
     public WebSocketConnection(WebSocketScope scope, Session session) {
         // set our path
         path = scope.getPath();
@@ -135,10 +128,14 @@ public class WebSocketConnection extends AttributeStore {
         }
         // get request parameters
         Map<String, String> pathParameters = wsSession.getPathParameters();
-        log.debug("pathParameters: {}", pathParameters);
+        if (isDebug) {
+            log.debug("pathParameters: {}", pathParameters);
+        }
         // get user props
         Map<String, Object> userProps = wsSession.getUserProperties();
-        log.debug("userProps: {}", userProps);
+        if (isDebug) {
+            log.debug("userProps: {}", userProps);
+        }
     }
 
     /**
@@ -150,48 +147,30 @@ public class WebSocketConnection extends AttributeStore {
      * @throws IOException
      */
     public void send(String data) throws UnsupportedEncodingException, IOException {
-        log.debug("send message: {}", data);
+        if (isDebug) {
+            log.debug("send message: {}", data);
+        }
         // process the incoming string
         if (StringUtils.isNotBlank(data)) {
             if (wsSession.isOpen()) {
-                // add the data to the queue first
-                outputQueue.add(data);
-                // check for an existing send future and if there is one, return and let it do its work
-                if (sendFuture == null || sendFuture.isDone()) {
+                if (isConnected()) {
                     try {
-                        // acquire lock and drain the queue
-                        if (sendLock.tryAcquire(100L, TimeUnit.MILLISECONDS)) {
-                            outputQueue.forEach(output -> {
-                                if (isConnected()) {
-                                    try {
-                                        if (useAsync) {
-                                            sendFuture = wsSession.getAsyncRemote().sendText(output);
-                                            sendFuture.get(sendTimeout, TimeUnit.MILLISECONDS);
-                                        } else {
-                                            wsSession.getBasicRemote().sendText(output);
-                                        }
-                                        writeUpdater.addAndGet(this, output.getBytes().length);
-                                    } catch (TimeoutException e) {
-                                        if (log.isDebugEnabled()) {
-                                            log.warn("Send timed out");
-                                        }
-                                    } catch (Exception e) {
-                                        if (log.isDebugEnabled()) {
-                                            log.warn("Send wait interrupted", e);
-                                        }
-                                    } finally {
-                                        outputQueue.remove(output);
-                                    }
-                                }
-                            });
-                            // release
-                            sendLock.release();
+                        int lengthToWrite = data.getBytes().length;
+                        if (useAsync) {
+                            // a new future is returned on each call
+                            Future<Void> sendFuture = wsSession.getAsyncRemote().sendText(data);
+                            sendFuture.get(sendTimeout, TimeUnit.MILLISECONDS);
+                        } else {
+                            wsSession.getBasicRemote().sendText(data);
                         }
-                    } catch (InterruptedException e) {
-                        log.warn("Send interrupted", e);
-                        // release
-                        sendLock.release();
+                        writeUpdater.addAndGet(this, lengthToWrite);
+                    } catch (TimeoutException e) {
+                        log.warn("Send timed out");
+                    } catch (Exception e) {
+                        log.warn("Send text exception", e);
                     }
+                } else {
+                    throw new IOException("WS connection closed");
                 }
             } else {
                 throw new IOException("WS session closed");
@@ -208,29 +187,23 @@ public class WebSocketConnection extends AttributeStore {
      * @throws IOException
      */
     public void send(byte[] buf) throws IOException {
-        if (log.isDebugEnabled()) {
+        if (isDebug) {
             log.debug("send binary: {}", Arrays.toString(buf));
         }
         if (wsSession.isOpen()) {
             try {
-                if (sendLock.tryAcquire(100L, TimeUnit.MILLISECONDS)) {
-                    // send the bytes
-                    if (useAsync) {
-                        sendFuture = wsSession.getAsyncRemote().sendBinary(ByteBuffer.wrap(buf));
-                        // wait up-to ws timeout
-                        sendFuture.get(sendTimeout, TimeUnit.MILLISECONDS);
-                    } else {
-                        wsSession.getBasicRemote().sendBinary(ByteBuffer.wrap(buf));
-                    }
-                    // update counter
-                    writeUpdater.addAndGet(this, buf.length);
-                    // release
-                    sendLock.release();
+                // send the bytes
+                if (useAsync) {
+                    Future<Void> sendFuture = wsSession.getAsyncRemote().sendBinary(ByteBuffer.wrap(buf));
+                    // wait up-to ws timeout
+                    sendFuture.get(sendTimeout, TimeUnit.MILLISECONDS);
+                } else {
+                    wsSession.getBasicRemote().sendBinary(ByteBuffer.wrap(buf));
                 }
+                // update counter
+                writeUpdater.addAndGet(this, buf.length);
             } catch (Exception e) {
-                log.warn("Send bytes interrupted", e);
-                // release
-                sendLock.release();
+                log.warn("Send bytes exception", e);
             }
         } else {
             throw new IOException("WS session closed");
@@ -245,7 +218,7 @@ public class WebSocketConnection extends AttributeStore {
      * @throws IllegalArgumentException
      */
     public void sendPing(byte[] buf) throws IllegalArgumentException, IOException {
-        if (log.isTraceEnabled()) {
+        if (isTrace) {
             log.trace("send ping: {}", buf);
         }
         if (wsSession.isOpen()) {
@@ -266,7 +239,7 @@ public class WebSocketConnection extends AttributeStore {
      * @throws IllegalArgumentException
      */
     public void sendPong(byte[] buf) throws IllegalArgumentException, IOException {
-        if (log.isTraceEnabled()) {
+        if (isTrace) {
             log.trace("send pong: {}", buf);
         }
         if (wsSession.isOpen()) {
@@ -285,20 +258,6 @@ public class WebSocketConnection extends AttributeStore {
     public void close() {
         if (connected.compareAndSet(true, false)) {
             // TODO disconnect from scope etc...
-            if (sendFuture != null) {
-                // be nice, dont interrupt
-                sendFuture.cancel(false);
-                try {
-                    // give it a few ticks to complete (using write timeout 20s)
-                    sendFuture.get(sendTimeout, TimeUnit.MILLISECONDS);
-                } catch (Exception e) {
-                    if (log.isDebugEnabled()) {
-                        log.warn("Exception at close waiting for send to finish", e);
-                    }
-                } finally {
-                    outputQueue.clear();
-                }
-            }
             // normal close
             if (wsSession.isOpen()) {
                 try {
@@ -449,10 +408,14 @@ public class WebSocketConnection extends AttributeStore {
             }
             Optional<List<String>> protocolHeader = Optional.ofNullable(headers.get(WSConstants.WS_HEADER_PROTOCOL));
             if (protocolHeader.isPresent()) {
-                log.debug("Protocol header(s) exist: {}", protocolHeader.get());
+                if (isDebug) {
+                    log.debug("Protocol header(s) exist: {}", protocolHeader.get());
+                }
                 protocol = protocolHeader.get().get(0);
             }
-            log.debug("Set from headers - user-agent: {} host: {} origin: {}", userAgent, host, origin);
+            if (isDebug) {
+                log.debug("Set from headers - user-agent: {} host: {} origin: {}", userAgent, host, origin);
+            }
             this.headers = headers;
         } else {
             this.headers = Collections.emptyMap();

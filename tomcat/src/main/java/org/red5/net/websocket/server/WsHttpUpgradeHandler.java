@@ -37,6 +37,8 @@ public class WsHttpUpgradeHandler implements InternalHttpUpgradeHandler {
 
     private Logger log = LoggerFactory.getLogger(WsHttpUpgradeHandler.class); // must not be static
 
+    private final boolean isDebug = log.isDebugEnabled();
+
     private static final StringManager sm = StringManager.getManager(WsHttpUpgradeHandler.class);
 
     private final ClassLoader applicationClassLoader;
@@ -121,7 +123,10 @@ public class WsHttpUpgradeHandler implements InternalHttpUpgradeHandler {
             WebSocketScope scope = (WebSocketScope) endpointConfig.getUserProperties().get(WSConstants.WS_SCOPE);
             // create a ws connection instance
             WebSocketConnection conn = new WebSocketConnection(scope, wsSession);
-            log.debug("New connection: {}", conn);
+            // in debug check since WebSocketConnection.toString is a tiny bit expensive
+            if (isDebug) {
+                log.debug("New connection: {}", conn);
+            }
             // set ip and port
             conn.setAttribute(WSConstants.WS_HEADER_REMOTE_IP, socketWrapper.getRemoteAddr());
             conn.setAttribute(WSConstants.WS_HEADER_REMOTE_PORT, socketWrapper.getRemotePort());
@@ -244,7 +249,7 @@ public class WsHttpUpgradeHandler implements InternalHttpUpgradeHandler {
      */
     @Override
     public void timeoutAsync(long now) {
-        log.debug("timeoutAsync: {}", now);
+        log.trace("timeoutAsync: {}", now);
     }
 
 }
