@@ -21,24 +21,33 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import javax.servlet.ServletException;
 
+import org.red5.server.LoaderBase;
 import org.red5.server.jmx.mxbeans.LoaderMXBean;
 import org.red5.server.util.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 
 /**
  * This service provides the means to auto-deploy a war.
  * 
  * @author Paul Gregoire (mondain@gmail.com)
  */
-public final class WarDeployer implements InitializingBean, DisposableBean {
+public final class WarDeployer implements ApplicationContextAware, InitializingBean, DisposableBean {
 
     private Logger log = LoggerFactory.getLogger(WarDeployer.class);
 
     //that wars are currently being installed
     private static AtomicBoolean deploying = new AtomicBoolean(false);
+
+    /**
+     * Spring Application context
+     */
+    private ApplicationContext applicationContext;
 
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
@@ -84,6 +93,17 @@ public final class WarDeployer implements InitializingBean, DisposableBean {
         if (expandWars) {
             log.debug("Deploying wars");
             deploy(false);
+        }
+        try {
+            // check for an embedded jee server
+            LoaderBase jeeServer = applicationContext.getBean(LoaderBase.class);
+            // lookup the jee container
+            if (jeeServer == null) {
+                log.info("JEE server was not found");
+            } else {
+                log.info("JEE server was found: {}", jeeServer.toString());
+            }
+        } catch (Exception e) {
         }
     }
 
@@ -163,6 +183,11 @@ public final class WarDeployer implements InitializingBean, DisposableBean {
             future.cancel(true);
         }
         scheduler.shutdownNow();
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
     }
 
     public void setCheckInterval(int checkInterval) {
