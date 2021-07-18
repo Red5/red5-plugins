@@ -19,7 +19,7 @@
         <java.release.level>11</java.release.level>
         <tyrus.version>1.15</tyrus.version>
         <!-- Local to plugin version of tomcat https://tomcat.apache.org/download-80.cgi -->
-        <tomcat-local.version>8.5.61</tomcat-local.version>
+        <tomcat-local.version>8.5.63</tomcat-local.version>
     </properties>
     <build>
         <defaultGoal>install</defaultGoal>
