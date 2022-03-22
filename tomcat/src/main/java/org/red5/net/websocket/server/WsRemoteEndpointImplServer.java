@@ -150,13 +150,8 @@ public class WsRemoteEndpointImplServer extends WsRemoteEndpointImplBase {
             // whether or not this method was called by the same thread that triggered the write
             clearHandler(new EOFException(), true);
         }
-        try {
-            socketWrapper.close();
-        } catch (IOException e) {
-            if (log.isDebugEnabled()) {
-                log.warn(sm.getString("wsRemoteEndpointServer.closeFailed"), e);
-            }
-        }
+        // no ex thrown here anymore, handled elsewhere in lib
+        socketWrapper.close();
         wsWriteTimeout.unregister(this);
     }
 
@@ -198,7 +193,7 @@ public class WsRemoteEndpointImplServer extends WsRemoteEndpointImplBase {
         if (sh != null) {
             if (useDispatch) {
                 OnResultRunnable r = new OnResultRunnable(sh, t);
-                AbstractEndpoint<?> endpoint = socketWrapper.getEndpoint();
+                AbstractEndpoint<?, ?> endpoint = socketWrapper.getEndpoint();
                 Executor containerExecutor = endpoint.getExecutor();
                 if (endpoint.isRunning() && containerExecutor != null) {
                     containerExecutor.execute(r);
